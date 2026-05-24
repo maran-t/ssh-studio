@@ -38,7 +38,8 @@ import {
 } from './js/editor.js';
 import {
   parseAnsiColors, renderTerminalLog, pushTerminal, command, updateTerminalPrompt,
-  focusTerminalInputAtBottom, runTerminalCommand
+  focusTerminalInputAtBottom, runTerminalCommand, initializeNativeTerminal,
+  attachTerminal, detachTerminal
 } from './js/terminal.js';
 
 // DOM Selectors
@@ -665,6 +666,10 @@ function updateConnectionDetails() {
   
   if (state.session) {
     syncConnectionStatusChrome(true);
+    const terminalWindow = document.querySelector("#terminalWindow");
+    if (terminalWindow && !terminalWindow.classList.contains("minimized") && !terminalWindow.classList.contains("closed")) {
+      attachTerminal();
+    }
     if (connectionStateEl) {
       connectionStateEl.textContent = "Connected";
       connectionStateEl.dataset.tone = "success";
@@ -704,6 +709,7 @@ function updateConnectionDetails() {
     if (disconnectButton) disconnectButton.classList.add("visible");
   } else {
     syncConnectionStatusChrome(false);
+    detachTerminal();
     if (connectionStateEl) {
       connectionStateEl.textContent = "Offline";
       connectionStateEl.dataset.tone = "";
@@ -830,6 +836,7 @@ window.require(["vs/editor/editor.main"], () => {
 // Initialize session state
 async function initializeSessionState() {
   loadSavedConnection();
+  initializeNativeTerminal();
   updateConnectionDetails();
   renderFiles([], true);
   applySavedLayout();

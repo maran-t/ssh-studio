@@ -18,13 +18,60 @@
 .terminal-body {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
-  display: block;
+  position: relative;
+  overflow: hidden;
+  display: flex;
   background:
     radial-gradient(circle at 12% 0%, rgba(116, 216, 154, 0.08), transparent 26%),
     #101820;
-  padding: 14px 16px 12px;
+  padding: 8px 10px;
   font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+.terminal-mount {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.terminal-mount .xterm {
+  height: 100%;
+  padding: 4px 2px;
+}
+
+.terminal-mount .xterm-viewport,
+.terminal-mount .xterm-screen {
+  background: transparent !important;
+}
+
+.terminal-status {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  max-width: min(420px, calc(100% - 24px));
+  border: 1px solid rgba(116, 216, 154, 0.2);
+  border-radius: 4px;
+  padding: 5px 8px;
+  background: rgba(16, 24, 32, 0.88);
+  color: #a8b5c3;
+  font-size: 11px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.terminal-status[data-tone="warn"] {
+  border-color: rgba(242, 189, 69, 0.28);
+  color: #f2bd45;
+}
+
+.terminal-status[data-tone="error"] {
+  border-color: rgba(239, 95, 87, 0.32);
+  color: #ff9b9b;
+}
+
+.terminal-status.hidden {
+  display: none;
 }
 
 #terminalLog {

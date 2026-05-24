@@ -213,6 +213,7 @@ export function focusWindow(id) {
   if (wasHidden || !wasFocused) animateWindow(targetWindow, wasHidden ? "open" : "focus");
   rememberRecentApp(id);
   if (id === "editorWindow" && state.editor) setTimeout(() => state.editor.layout(), 80);
+  document.dispatchEvent(new CustomEvent("windowFocused", { detail: { id } }));
 }
 
 export async function minimizeWindow(id) {
@@ -295,6 +296,7 @@ export function maximizeWindow(id) {
   };
   animateWindow(targetWindow, "maximize", { flip });
   if (id === "editorWindow" && state.editor) setTimeout(() => state.editor.layout(), 80);
+  document.dispatchEvent(new CustomEvent("windowResized", { detail: { id } }));
   persistWindowLayout();
 }
 

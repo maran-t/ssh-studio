@@ -3,11 +3,14 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { Client } = require("ssh2");
 const express = require("express");
+const { WebSocketServer } = require("ws");
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const sessions = new Map();
+const terminalSockets = new Set();
 let serverInstance = null;
+let terminalWss = null;
 
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ limit: "100mb", extended: true }));
@@ -64,6 +67,108 @@ function execDetailed(client, command) {
 
 function shellQuote(value) {
   return `'${String(value).replace(/'/g, `'\\''`)}'`;
+}
+
+function closeTerminalSocket(socket, code = 1000, reason = "Terminal closed") {
+  try {
+    if (socket.readyState === 1) socket.close(code, reason);
+  } catch {
+    // Socket cleanup should not affect app shutdown.
+  }
+}
+
+function attachTerminalWebSocket(socket, req) {
+  terminalSockets.add(socket);
+
+  const url = new URL(req.url, "http://127.0.0.1");
+  const sessionId = decodeURIComponent(url.pathname.split("/").pop() || "");
+  const session = sessions.get(sessionId);
+  const cols = Math.max(20, Math.min(240, Number(url.searchParams.get("cols") || 100)));
+  const rows = Math.max(8, Math.min(80, Number(url.searchParams.get("rows") || 30)));
+  const cwd = url.searchParams.get("cwd") || session?.startPath || ".";
+  let shellStream = null;
+
+  const cleanup = () => {
+    terminalSockets.delete(socket);
+    if (shellStream) {
+      shellStream.removeAllListeners();
+      try {
+        shellStream.end();
+      } catch {
+        // The remote shell may already be gone.
+      }
+      shellStream = null;
+    }
+  };
+
+  socket.on("close", cleanup);
+  socket.on("error", cleanup);
+
+  if (!session) {
+    socket.send("\r\nSSH session is not active. Connect again.\r\n");
+    closeTerminalSocket(socket, 4004, "Missing SSH session");
+    return;
+  }
+
+  session.client.shell(
+    {
+      term: "xterm-256color",
+      cols,
+      rows,
+      modes: {
+        ECHO: 1,
+        TTY_OP_ISPEED: 14400,
+        TTY_OP_OSPEED: 14400,
+      },
+    },
+    (error, stream) => {
+      if (error) {
+        socket.send(`\r\nUnable to start remote terminal: ${error.message || error}\r\n`);
+        closeTerminalSocket(socket, 1011, "Terminal startup failed");
+        return;
+      }
+
+      shellStream = stream;
+      stream
+        .on("data", (chunk) => {
+          if (socket.readyState === socket.OPEN) socket.send(chunk.toString("utf8"));
+        })
+        .on("close", () => {
+          if (socket.readyState === socket.OPEN) socket.send("\r\nRemote terminal closed.\r\n");
+          closeTerminalSocket(socket, 1000, "Remote terminal closed");
+        })
+        .on("error", (streamError) => {
+          if (socket.readyState === socket.OPEN) {
+            socket.send(`\r\nRemote terminal error: ${streamError.message || streamError}\r\n`);
+          }
+          closeTerminalSocket(socket, 1011, "Remote terminal error");
+        });
+
+      stream.stderr?.on("data", (chunk) => {
+        if (socket.readyState === socket.OPEN) socket.send(chunk.toString("utf8"));
+      });
+
+      if (cwd && cwd !== ".") stream.write(`cd ${shellQuote(cwd)}\r`);
+    },
+  );
+
+  socket.on("message", (raw) => {
+    if (!shellStream) return;
+    let message;
+    try {
+      message = JSON.parse(raw.toString());
+    } catch {
+      return;
+    }
+
+    if (message.type === "input") {
+      shellStream.write(String(message.data || ""));
+    } else if (message.type === "resize") {
+      const nextCols = Math.max(20, Math.min(240, Number(message.cols || cols)));
+      const nextRows = Math.max(8, Math.min(80, Number(message.rows || rows)));
+      shellStream.setWindow(nextRows, nextCols, 0, 0);
+    }
+  });
 }
 
 function sftp(client) {
@@ -543,6 +648,8 @@ app.get("*", (req, res) => {
 });
 
 function closeSessions() {
+  for (const socket of terminalSockets) closeTerminalSocket(socket);
+  terminalSockets.clear();
   for (const session of sessions.values()) session.client.end();
   sessions.clear();
 }
@@ -557,6 +664,17 @@ function startServer(options = {}) {
         const address = serverInstance.address();
         const actualPort = typeof address === "object" && address ? address.port : targetPort;
         const hasPackage = fs.existsSync(path.join(__dirname, "package.json"));
+        terminalWss = new WebSocketServer({ noServer: true });
+        terminalWss.on("connection", attachTerminalWebSocket);
+        serverInstance.on("upgrade", (req, socket, head) => {
+          if (!req.url?.startsWith("/terminal/")) {
+            socket.destroy();
+            return;
+          }
+          terminalWss.handleUpgrade(req, socket, head, (ws) => {
+            terminalWss.emit("connection", ws, req);
+          });
+        });
         console.log(`SSH OS Bridge listening at http://localhost:${actualPort}`);
         if (!hasPackage) console.log("Run npm install before starting the server.");
         resolve(serverInstance);
@@ -581,6 +699,10 @@ function stopServer() {
     if (!serverInstance) {
       resolve();
       return;
+    }
+    if (terminalWss) {
+      terminalWss.close();
+      terminalWss = null;
     }
     serverInstance.close(() => {
       serverInstance = null;

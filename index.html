@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./node_modules/monaco-editor/min/vs/style.css" />
+    <link rel="stylesheet" href="./node_modules/@xterm/xterm/css/xterm.css" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -386,12 +387,8 @@
           <!-- <button id="clearLogButton" type="button">Clear</button> -->
         </div>
         <div class="terminal-body" id="terminalBody">
-          <div id="terminalLog" aria-live="polite"></div>
-          <div class="terminal-command-inline" id="terminalForm">
-            <span id="terminalPrompt">local $</span>
-            <input id="terminalInput" autocomplete="off" spellcheck="false" placeholder="" />
-            <button id="runCommandButton" type="button" style="display:none;">Run</button>
-          </div>
+          <div id="terminalMount" class="terminal-mount" aria-label="Remote SSH terminal"></div>
+          <div id="terminalStatus" class="terminal-status">Connect to SSH to start a terminal.</div>
         </div>
       </section>
 

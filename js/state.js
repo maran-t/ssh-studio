@@ -19,7 +19,7 @@ export const state = {
   commandHistory: [],
   logLines: [],
   topZIndex: 50,
-  isAnimationEnabled: localStorage.getItem("sshBridgeAnimations") !== "false",
+  isAnimationEnabled: localStorage.getItem("sshBridgeAnimations") === "true",
 
   // Path history and lists
   pathHistoryBack: [],
