@@ -71,7 +71,7 @@ export function rememberRecentApp(id) {
 
 export function openStartMenu() {
   const menu = startMenuPanelEl();
-  if (!menu || !state.session) return;
+  if (!menu) return;
   renderRecentApps();
   menu.classList.remove("hidden");
   menu.setAttribute("aria-hidden", "false");
@@ -83,7 +83,7 @@ export function openStartMenu() {
       { autoAlpha: 1, filter: "blur(0px)", duration: 0.22, ease: "power3.out" },
     );
     window.gsap.fromTo(
-      menu.querySelectorAll(".launcher-app, .launcher-recent-item, .start-account-pane"),
+      menu.querySelectorAll(".launcher-app, .launcher-recent-item, .start-account-pane, .start-search"),
       { autoAlpha: 0, y: 10 },
       { autoAlpha: 1, y: 0, duration: 0.2, stagger: 0.025, ease: "power2.out" },
     );
@@ -118,11 +118,6 @@ export function closeStartMenu(animate = true) {
 }
 
 export function toggleStartMenu() {
-  if (!state.session) {
-    closeStartMenu(false);
-    connectPanelEl()?.classList.toggle("hidden");
-    return;
-  }
   const menu = startMenuPanelEl();
   if (menu?.classList.contains("hidden")) {
     openStartMenu();

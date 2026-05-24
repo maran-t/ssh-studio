@@ -639,6 +639,23 @@ document.addEventListener("connectionDetailsUpdated", () => {
   updateConnectionDetails();
 });
 
+function syncConnectionStatusChrome(isConnected) {
+  const statusLabel = isConnected ? "Connected" : "Disconnected";
+  document.querySelectorAll(".connect-pill .status-dot, #trayConnectionPill .status-dot").forEach((dot) => {
+    dot.classList.toggle("connected", isConnected);
+    dot.classList.toggle("disconnected", !isConnected);
+  });
+
+  const detailStatus = document.querySelector("#detailStatus");
+  if (detailStatus) detailStatus.textContent = statusLabel;
+
+  const trayConnectionPill = document.querySelector("#trayConnectionPill");
+  if (trayConnectionPill) {
+    const tooltip = `SSH connection status: ${statusLabel}`;
+    setTaskbarTooltipTarget(trayConnectionPill, tooltip);
+  }
+}
+
 function updateConnectionDetails() {
   const details = document.querySelector("#connectionDetails");
   const connectionStateEl = document.querySelector("#connectionState");
@@ -647,6 +664,7 @@ function updateConnectionDetails() {
   const cipherVal = document.querySelector("#connectionCipher");
   
   if (state.session) {
+    syncConnectionStatusChrome(true);
     if (connectionStateEl) {
       connectionStateEl.textContent = "Connected";
       connectionStateEl.dataset.tone = "success";
@@ -685,6 +703,7 @@ function updateConnectionDetails() {
     
     if (disconnectButton) disconnectButton.classList.add("visible");
   } else {
+    syncConnectionStatusChrome(false);
     if (connectionStateEl) {
       connectionStateEl.textContent = "Offline";
       connectionStateEl.dataset.tone = "";
@@ -830,6 +849,7 @@ async function initializeSessionState() {
   initializeEditorExplorerResize();
   syncTaskbarState();
   initializeTaskbarTooltips();
+  updateConnectionDetails();
 }
 
 initializeSessionState();

@@ -267,20 +267,20 @@ textarea:focus-visible {
   left: 50%;
   bottom: 76px;
   display: grid;
-  grid-template-columns: minmax(220px, 0.85fr) minmax(360px, 1.15fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 18px;
-  width: min(760px, calc(100vw - 32px));
-  min-height: 430px;
-  border: 1px solid rgba(255, 255, 255, 0.62);
-  border-radius: 22px;
-  padding: 18px;
+  width: min(640px, calc(100vw - 32px));
+  min-height: 590px;
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  border-radius: 8px;
+  padding: 26px 30px 0;
   background:
-    linear-gradient(135deg, rgba(248, 250, 252, 0.94), rgba(226, 238, 250, 0.86)),
-    radial-gradient(circle at 12% 14%, rgba(2, 132, 199, 0.18), transparent 30%);
+    linear-gradient(180deg, rgba(248, 251, 255, 0.94), rgba(236, 244, 253, 0.91)),
+    radial-gradient(circle at 18% 8%, rgba(99, 179, 237, 0.18), transparent 34%);
   color: #172033;
-  box-shadow: 0 34px 90px rgba(3, 14, 30, 0.34);
+  box-shadow: 0 30px 90px rgba(3, 14, 30, 0.32);
   transform: translateX(-50%);
-  backdrop-filter: blur(28px) saturate(1.18);
+  backdrop-filter: blur(34px) saturate(1.25);
 }
 
 .start-menu-panel.hidden {
@@ -292,31 +292,61 @@ textarea:focus-visible {
   min-width: 0;
 }
 
+.start-search {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  border: 1px solid rgba(120, 146, 176, 0.44);
+  border-bottom: 2px solid #0078d4;
+  border-radius: 6px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #526174;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.start-search span {
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.start-search input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #243044;
+  font-size: 13px;
+  font-weight: 650;
+}
+
 .start-account-pane {
   display: grid;
-  align-content: space-between;
-  gap: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  border-radius: 16px;
-  padding: 18px;
-  background:
-    linear-gradient(160deg, rgba(15, 23, 42, 0.94), rgba(30, 64, 91, 0.88)),
-    radial-gradient(circle at 25% 15%, rgba(56, 189, 248, 0.34), transparent 32%);
-  color: #fff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 0 -30px;
+  min-height: 72px;
+  border-top: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 0 0 8px 8px;
+  padding: 12px 30px;
+  background: rgba(226, 236, 248, 0.82);
+  color: #172033;
 }
 
 .start-avatar {
   display: grid;
   place-items: center;
-  width: 58px;
-  height: 58px;
-  border-radius: 18px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
   background: linear-gradient(135deg, var(--windows), var(--accent));
   color: #fff;
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 900;
-  box-shadow: 0 14px 28px rgba(2, 132, 199, 0.26);
+  box-shadow: 0 10px 22px rgba(2, 132, 199, 0.22);
 }
 
 .start-account-copy {
@@ -328,7 +358,7 @@ textarea:focus-visible {
 .start-account-copy span,
 .start-account-copy small,
 .start-account-meta span {
-  color: rgba(255, 255, 255, 0.68);
+  color: #64748b;
   font-size: 12px;
   font-weight: 750;
 }
@@ -337,7 +367,7 @@ textarea:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 22px;
+  font-size: 13px;
   font-weight: 900;
 }
 
@@ -347,8 +377,7 @@ textarea:focus-visible {
 }
 
 .start-account-meta {
-  display: grid;
-  gap: 8px;
+  display: none;
 }
 
 .start-account-meta span {
@@ -363,30 +392,32 @@ textarea:focus-visible {
 }
 
 .start-account-actions {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  align-items: center;
   gap: 8px;
 }
 
 .start-account-button {
   min-height: 34px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  border-radius: 6px;
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.74);
+  color: #243044;
   font-size: 12px;
   font-weight: 900;
 }
 
 .start-account-button:hover {
-  background: rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .start-app-pane {
   display: grid;
-  gap: 18px;
+  gap: 24px;
   align-content: start;
-  padding: 2px 4px 2px 0;
+  padding: 0 6px 0;
+  overflow: hidden auto;
 }
 
 .launcher-section {
@@ -399,11 +430,22 @@ textarea:focus-visible {
   align-items: center;
   justify-content: space-between;
   min-height: 20px;
-  padding: 0 2px;
+  padding: 0 4px;
   color: #172033;
   font-size: 12px;
   font-weight: 900;
   letter-spacing: 0;
+}
+
+.launcher-all-button {
+  min-height: 26px;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 5px;
+  padding: 0 10px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #334155;
+  font-size: 11px;
+  font-weight: 850;
 }
 
 .launcher-title-row small {
@@ -414,49 +456,47 @@ textarea:focus-visible {
 
 .launcher-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px 14px;
 }
 
 .launcher-app,
 .launcher-recent-item {
-  border: 1px solid rgba(148, 163, 184, 0.26);
-  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid transparent;
+  background: transparent;
   color: #172033;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+  box-shadow: none;
   backdrop-filter: blur(18px);
 }
 
 .launcher-app {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  grid-template-rows: auto auto;
-  align-items: center;
-  column-gap: 10px;
-  row-gap: 2px;
-  min-height: 74px;
-  border-radius: 12px;
-  padding: 10px;
-  text-align: left;
+  justify-items: center;
+  align-content: start;
+  gap: 8px;
+  min-height: 86px;
+  border-radius: 6px;
+  padding: 8px 6px;
+  text-align: center;
 }
 
 .launcher-app:hover,
 .launcher-recent-item:hover {
-  border-color: rgba(2, 132, 199, 0.34);
-  background: rgba(255, 255, 255, 0.84);
-  transform: translateY(-1px);
+  border-color: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.62);
+  transform: none;
 }
 
 .launcher-icon {
-  grid-row: 1 / span 2;
   display: grid;
   place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
   color: #fff;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 900;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
 }
 
 .launcher-files {
@@ -480,11 +520,10 @@ textarea:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 900;
 }
 
-.launcher-app small,
 .launcher-recent-item small {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -494,9 +533,14 @@ textarea:focus-visible {
   font-weight: 700;
 }
 
+.launcher-app small {
+  display: none;
+}
+
 .launcher-recent-list {
   display: grid;
-  gap: 7px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
 }
 
 .launcher-recent-item {
@@ -504,9 +548,9 @@ textarea:focus-visible {
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 9px;
-  min-height: 42px;
-  border-radius: 10px;
-  padding: 7px 9px;
+  min-height: 50px;
+  border-radius: 7px;
+  padding: 8px 9px;
   text-align: left;
 }
 
@@ -786,6 +830,11 @@ textarea:focus-visible {
   box-shadow: 0 0 0 2px rgba(57, 166, 106, 0.22);
 }
 
+.status-dot.connected {
+  background: var(--green);
+  box-shadow: 0 0 0 2px rgba(57, 166, 106, 0.24), 0 0 12px rgba(57, 166, 106, 0.34);
+}
+
 .status-dot.disconnected {
   background: #c74c4c;
   box-shadow: 0 0 0 2px rgba(199, 76, 76, 0.2);
@@ -807,8 +856,7 @@ textarea:focus-visible {
   background: var(--glass-unfocused);
   box-shadow: var(--shadow-unfocused);
   backdrop-filter: blur(26px);
-  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s, filter 0.2s;
-  animation: window-appear 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transition: box-shadow 0.22s ease, filter 0.22s ease, border-color 0.22s ease, background 0.22s ease;
 }
 
 .resize-handle {

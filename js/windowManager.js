@@ -38,45 +38,104 @@ export function syncTaskbarState() {
   });
 }
 
-export function animateWindow(windowEl, type) {
-  if (!state.isAnimationEnabled || !windowEl) return Promise.resolve();
+function getTaskTargetDelta(windowEl) {
   const taskButton = document.querySelector(`[data-window="${windowEl.id}"]`);
   const windowRect = windowEl.getBoundingClientRect();
   const taskRect = taskButton?.getBoundingClientRect();
-  const minimizeX = taskRect ? taskRect.left + taskRect.width / 2 - (windowRect.left + windowRect.width / 2) : 0;
-  const minimizeY = taskRect ? taskRect.top + taskRect.height / 2 - (windowRect.top + windowRect.height / 2) : 54;
+  return {
+    x: taskRect ? taskRect.left + taskRect.width / 2 - (windowRect.left + windowRect.width / 2) : 0,
+    y: taskRect ? taskRect.top + taskRect.height / 2 - (windowRect.top + windowRect.height / 2) : 54,
+    origin: taskRect
+      ? `${Math.round(((taskRect.left + taskRect.width / 2 - windowRect.left) / windowRect.width) * 100)}% 100%`
+      : "50% 100%",
+  };
+}
+
+export function animateWindow(windowEl, type, options = {}) {
+  if (!state.isAnimationEnabled || !windowEl) return Promise.resolve();
+  window.gsap?.killTweensOf(windowEl);
+  const dockDelta = getTaskTargetDelta(windowEl);
+  const minimizeX = dockDelta.x;
+  const minimizeY = dockDelta.y;
 
   const gsapAnimations = {
     open: {
-      from: { autoAlpha: 0, y: 24, scale: 0.95, filter: "blur(5px)", transformOrigin: "50% 100%" },
-      to: { autoAlpha: 1, y: 0, scale: 1, filter: "blur(0px)", duration: 0.28, ease: "power3.out" },
+      from: {
+        autoAlpha: 0,
+        x: minimizeX * 0.35,
+        y: Math.min(48, Math.max(18, minimizeY * 0.22)),
+        scaleX: 0.88,
+        scaleY: 0.72,
+        filter: "blur(10px)",
+        transformOrigin: dockDelta.origin,
+        clipPath: "inset(22% 18% 0% 18% round 18px)",
+      },
+      to: {
+        autoAlpha: 1,
+        x: 0,
+        y: 0,
+        scaleX: 1,
+        scaleY: 1,
+        filter: "blur(0px)",
+        clipPath: "inset(0% 0% 0% 0% round 0px)",
+        duration: 0.46,
+        ease: "expo.out",
+      },
     },
     focus: {
-      from: { y: 0, scale: 0.992, filter: "brightness(1.02)" },
-      to: { y: -1, scale: 1, filter: "brightness(1)", duration: 0.18, ease: "power2.out" },
+      from: { y: 0, scale: 0.996, filter: "brightness(1.035) saturate(1.04)" },
+      to: { y: -1, scale: 1, filter: "brightness(1) saturate(1)", duration: 0.22, ease: "sine.out" },
     },
     minimize: {
-      from: { autoAlpha: 1, x: 0, y: 0, scale: 1, filter: "blur(0px)", transformOrigin: "50% 100%" },
-      to: { autoAlpha: 0, x: minimizeX, y: minimizeY, scale: 0.72, filter: "blur(4px)", duration: 0.3, ease: "power3.inOut" },
+      from: {
+        autoAlpha: 1,
+        x: 0,
+        y: 0,
+        scaleX: 1,
+        scaleY: 1,
+        skewX: 0,
+        filter: "blur(0px)",
+        transformOrigin: dockDelta.origin,
+        clipPath: "inset(0% 0% 0% 0% round 0px)",
+      },
+      to: {
+        autoAlpha: 0,
+        x: minimizeX,
+        y: minimizeY,
+        scaleX: 0.18,
+        scaleY: 0.08,
+        skewX: minimizeX < 0 ? 9 : -9,
+        filter: "blur(8px)",
+        clipPath: "inset(38% 22% 0% 22% round 18px)",
+        duration: 0.42,
+        ease: "power3.inOut",
+      },
     },
     close: {
-      from: { autoAlpha: 1, scale: 1, filter: "blur(0px)" },
-      to: { autoAlpha: 0, scale: 0.95, y: 8, filter: "blur(5px)", duration: 0.18, ease: "power2.in" },
+      from: { autoAlpha: 1, scale: 1, y: 0, filter: "blur(0px) brightness(1)", transformOrigin: "50% 52%" },
+      to: { autoAlpha: 0, scale: 0.965, y: 10, filter: "blur(8px) brightness(1.08)", duration: 0.2, ease: "sine.in" },
     },
     maximize: {
-      from: { scale: 0.975, filter: "blur(2px)", transformOrigin: "50% 50%" },
-      to: { scale: 1, filter: "blur(0px)", duration: 0.22, ease: "power3.out" },
+      from: {
+        x: options.flip?.x || 0,
+        y: options.flip?.y || 0,
+        scaleX: options.flip?.scaleX || 0.98,
+        scaleY: options.flip?.scaleY || 0.98,
+        filter: "blur(2px)",
+        transformOrigin: "0 0",
+      },
+      to: { x: 0, y: 0, scaleX: 1, scaleY: 1, filter: "blur(0px)", duration: 0.36, ease: "expo.out" },
     },
   };
 
   const gsapConfig = gsapAnimations[type];
   if (window.gsap && gsapConfig) {
-    window.gsap.killTweensOf(windowEl);
     return new Promise((resolve) => {
       window.gsap.fromTo(windowEl, gsapConfig.from, {
         ...gsapConfig.to,
-        clearProps: type === "minimize" || type === "close" ? "transform,filter" : "transform,filter,opacity,visibility",
+        clearProps: "transform,filter,opacity,visibility,clipPath,clip-path,skewX",
         onComplete: resolve,
+        onInterrupt: resolve,
       });
     });
   }
@@ -92,10 +151,10 @@ export function animateWindow(windowEl, type) {
   const fallbackAnimations = {
     open: {
       keyframes: [
-        { opacity: 0, transform: "translate3d(0, 24px, 0) scale(0.95)", filter: "blur(5px)" },
-        { opacity: 1, transform: "translate3d(0, 0, 0) scale(1)", filter: "blur(0)" },
+        { opacity: 0, transform: `translate3d(${minimizeX * 0.35}px, 34px, 0) scale(0.84, 0.72)`, filter: "blur(10px)" },
+        { opacity: 1, transform: "translate3d(0, 0, 0) scale(1, 1)", filter: "blur(0)" },
       ],
-      options: { ...common, duration: 280 },
+      options: { ...common, duration: 460, easing: "cubic-bezier(0.19, 1, 0.22, 1)" },
     },
     focus: {
       keyframes: [
@@ -106,24 +165,24 @@ export function animateWindow(windowEl, type) {
     },
     minimize: {
       keyframes: [
-        { opacity: 1, transform: "translate3d(0, 0, 0) scale(1)", filter: "blur(0)" },
-        { opacity: 0, transform: `translate3d(${minimizeX}px, ${minimizeY}px, 0) scale(0.72)`, filter: "blur(4px)" },
+        { opacity: 1, transform: "translate3d(0, 0, 0) scale(1, 1)", filter: "blur(0)" },
+        { opacity: 0, transform: `translate3d(${minimizeX}px, ${minimizeY}px, 0) scale(0.18, 0.08)`, filter: "blur(8px)" },
       ],
-      options: { ...common, duration: 300 },
+      options: { ...common, duration: 420 },
     },
     close: {
       keyframes: [
         { opacity: 1, transform: "scale(1)", filter: "blur(0)" },
-        { opacity: 0, transform: "translate3d(0, 8px, 0) scale(0.95)", filter: "blur(5px)" },
+        { opacity: 0, transform: "translate3d(0, 10px, 0) scale(0.965)", filter: "blur(8px)" },
       ],
-      options: { ...common, duration: 180 },
+      options: { ...common, duration: 200, easing: "cubic-bezier(0.5, 0, 0.75, 0)" },
     },
     maximize: {
       keyframes: [
-        { transform: "scale(0.975)", filter: "blur(2px)" },
-        { transform: "scale(1)", filter: "blur(0)" },
+        { transform: `translate3d(${options.flip?.x || 0}px, ${options.flip?.y || 0}px, 0) scale(${options.flip?.scaleX || 0.98}, ${options.flip?.scaleY || 0.98})`, filter: "blur(2px)", transformOrigin: "0 0" },
+        { transform: "translate3d(0, 0, 0) scale(1, 1)", filter: "blur(0)", transformOrigin: "0 0" },
       ],
-      options: { ...common, duration: 220 },
+      options: { ...common, duration: 360, easing: "cubic-bezier(0.19, 1, 0.22, 1)" },
     },
   };
   const config = fallbackAnimations[type];
@@ -193,6 +252,7 @@ export function maximizeWindow(id) {
   const targetWindow = document.querySelector(`#${id}`);
   if (!targetWindow) return;
   targetWindow.classList.remove("minimized", "closed");
+  const beforeRect = targetWindow.getBoundingClientRect();
 
   const isMaximized = targetWindow.classList.contains("maximized");
   if (!isMaximized) {
@@ -218,8 +278,22 @@ export function maximizeWindow(id) {
     }
   }
 
-  focusWindow(id);
-  animateWindow(targetWindow, "maximize");
+  state.topZIndex++;
+  targetWindow.style.zIndex = state.topZIndex;
+  windows().forEach((windowEl) => {
+    windowEl.classList.toggle("focused", windowEl.id === id);
+  });
+  syncTaskbarState();
+  rememberRecentApp(id);
+
+  const afterRect = targetWindow.getBoundingClientRect();
+  const flip = {
+    x: beforeRect.left - afterRect.left,
+    y: beforeRect.top - afterRect.top,
+    scaleX: beforeRect.width / Math.max(afterRect.width, 1),
+    scaleY: beforeRect.height / Math.max(afterRect.height, 1),
+  };
+  animateWindow(targetWindow, "maximize", { flip });
   if (id === "editorWindow" && state.editor) setTimeout(() => state.editor.layout(), 80);
   persistWindowLayout();
 }

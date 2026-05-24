@@ -32,26 +32,15 @@
       </header>
 
       <section class="start-menu-panel hidden" id="startMenuPanel" aria-label="Start menu" aria-hidden="true">
-        <div class="start-account-pane">
-          <span class="start-avatar" id="startAvatar">SSH</span>
-          <div class="start-account-copy">
-            <span>Signed in as</span>
-            <strong id="startAccountName">Not connected</strong>
-            <small id="startAccountHost">Connect to SSH to launch apps</small>
-          </div>
-          <div class="start-account-meta">
-            <span id="startAccountDistro">Waiting for SSH</span>
-            <span id="startAccountPath">--</span>
-          </div>
-          <div class="start-account-actions">
-            <button class="start-account-button" type="button" data-launch-window="settingsWindow">Connection</button>
-            <button class="start-account-button" type="button" id="startDisconnectButton">Disconnect</button>
-          </div>
+        <div class="start-search">
+          <span aria-hidden="true">Search</span>
+          <input type="search" placeholder="Search apps, files, and remote actions" aria-label="Search apps, files, and remote actions" disabled />
         </div>
         <div class="start-app-pane">
           <div class="launcher-section">
             <div class="launcher-title-row">
               <span>Pinned</span>
+              <button class="launcher-all-button" type="button" data-launch-window="settingsWindow">All apps</button>
             </div>
             <div class="launcher-grid">
               <button class="launcher-app" type="button" data-launch-window="filesWindow" title="Open Files">
@@ -79,9 +68,25 @@
           <div class="launcher-section launcher-recent-section">
             <div class="launcher-title-row">
               <span>Recommended</span>
-              <small>Recently used</small>
+              <small>Recent remote tools</small>
             </div>
             <div class="launcher-recent-list" id="desktopRecentApps"></div>
+          </div>
+        </div>
+        <div class="start-account-pane">
+          <span class="start-avatar" id="startAvatar">SSH</span>
+          <div class="start-account-copy">
+            <span>Signed in as</span>
+            <strong id="startAccountName">Not connected</strong>
+            <small id="startAccountHost">Connect to SSH to launch apps</small>
+          </div>
+          <div class="start-account-meta">
+            <span id="startAccountDistro">Waiting for SSH</span>
+            <span id="startAccountPath">--</span>
+          </div>
+          <div class="start-account-actions">
+            <button class="start-account-button" type="button" data-launch-window="settingsWindow">Connection</button>
+            <button class="start-account-button" type="button" id="startDisconnectButton">Disconnect</button>
           </div>
         </div>
       </section>
