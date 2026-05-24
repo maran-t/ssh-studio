@@ -7,8 +7,10 @@ const express = require("express");
 const app = express();
 const port = Number(process.env.PORT || 3000);
 const sessions = new Map();
+let serverInstance = null;
 
-app.use(express.json({ limit: "2mb" }));
+app.use(express.json({ limit: "100mb" }));
+app.use(express.urlencoded({ limit: "100mb", extended: true }));
 app.use(express.static(__dirname));
 
 function exec(client, command) {
@@ -102,11 +104,79 @@ function readFile(sftpClient, remotePath) {
 
 function writeFile(sftpClient, remotePath, contents) {
   return new Promise((resolve, reject) => {
-    sftpClient.writeFile(remotePath, contents, "utf8", (error) => {
+    const encoding = Buffer.isBuffer(contents) ? undefined : "utf8";
+    sftpClient.writeFile(remotePath, contents, encoding, (error) => {
       if (error) reject(error);
       else resolve();
     });
   });
+}
+
+function unlinkPath(sftpClient, remotePath) {
+  return new Promise((resolve, reject) => {
+    sftpClient.unlink(remotePath, (error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+}
+
+function rmdirPath(sftpClient, remotePath) {
+  return new Promise((resolve, reject) => {
+    sftpClient.rmdir(remotePath, (error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+}
+
+async function rmdirRecursive(sftpClient, remotePath) {
+  const list = await readdir(sftpClient, remotePath);
+  for (const item of list) {
+    if (item.filename === "." || item.filename === "..") continue;
+    const fullPath = remotePath.endsWith("/") ? `${remotePath}${item.filename}` : `${remotePath}/${item.filename}`;
+    if (item.attrs.isDirectory()) {
+      await rmdirRecursive(sftpClient, fullPath);
+    } else {
+      await unlinkPath(sftpClient, fullPath);
+    }
+  }
+  await rmdirPath(sftpClient, remotePath);
+}
+
+function mkdirPath(sftpClient, remotePath) {
+  return new Promise((resolve, reject) => {
+    sftpClient.mkdir(remotePath, (error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+}
+
+function renamePath(sftpClient, fromPath, toPath) {
+  return new Promise((resolve, reject) => {
+    sftpClient.rename(fromPath, toPath, (error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+}
+
+function statPath(sftpClient, remotePath) {
+  return new Promise((resolve, reject) => {
+    sftpClient.stat(remotePath, (error, attrs) => {
+      if (error) reject(error);
+      else resolve(attrs);
+    });
+  });
+}
+
+function joinRemotePath(basePath, name) {
+  const cleanName = String(name || "").replace(/^\/+/, "");
+  if (!cleanName || cleanName.includes("\0") || cleanName.includes("/")) {
+    throw new Error("Use a simple file or folder name.");
+  }
+  return `${String(basePath || "/").replace(/\/$/, "")}/${cleanName}`.replace(/^\/\//, "/");
 }
 
 function formatSize(attrs) {
@@ -147,6 +217,19 @@ async function listPath(session, requestedPath) {
       return a.name.localeCompare(b.name);
     });
   return { path: resolvedPath, items };
+}
+
+function publicSession(session, startPath) {
+  return {
+    id: session.id,
+    host: session.host,
+    username: session.username,
+    port: session.port,
+    startPath,
+    distro: session.distro,
+    shell: session.shell,
+    auth: session.auth,
+  };
 }
 
 function connectSsh(config) {
@@ -209,20 +292,54 @@ app.post("/api/connect", async (req, res) => {
 
     const listing = await listPath(session, startPath || ".");
     res.json({
-      session: {
-        id,
-        host,
-        username,
-        port: session.port,
-        startPath: listing.path,
-        distro,
-        shell,
-        auth: session.auth,
-      },
+      session: publicSession(session, listing.path),
       ...listing,
     });
   } catch (error) {
     res.status(502).json({ error: error.message || "SSH connection failed." });
+  }
+});
+
+app.get("/api/sessions/:id", async (req, res) => {
+  const session = sessions.get(req.params.id);
+  if (!session) {
+    res.status(404).json({
+      error: "SSH session is not active. Connect again.",
+      activeSessions: sessions.size,
+    });
+    return;
+  }
+
+  try {
+    await exec(session.client, "printf ok");
+  } catch (error) {
+    sessions.delete(req.params.id);
+    res.status(502).json({ error: error.message || "SSH session health check failed." });
+    return;
+  }
+
+  try {
+    const listing = await listPath(session, req.query.path || session.startPath);
+    res.json({
+      session: publicSession(session, listing.path),
+      ...listing,
+    });
+  } catch (error) {
+    try {
+      const fallbackListing = await listPath(session, session.startPath || ".");
+      res.json({
+        session: publicSession(session, fallbackListing.path),
+        warning: error.message || "Unable to restore the previous folder.",
+        ...fallbackListing,
+      });
+    } catch (fallbackError) {
+      res.json({
+        session: publicSession(session, session.startPath || "."),
+        warning: fallbackError.message || error.message || "Unable to list the remote folder.",
+        path: session.startPath || ".",
+        items: [],
+      });
+    }
   }
 });
 
@@ -313,6 +430,105 @@ app.post("/api/sessions/:id/command", async (req, res) => {
   }
 });
 
+app.post("/api/sessions/:id/file-action", async (req, res) => {
+  const session = sessions.get(req.params.id);
+  if (!session) {
+    res.status(404).json({ error: "SSH session is not active. Connect again." });
+    return;
+  }
+
+  const { action, path: requestedPath, name, targetName, type } = req.body || {};
+  try {
+    const basePath = await realpath(session.sftp, requestedPath || session.startPath || ".");
+    if (action === "new-file") {
+      await writeFile(session.sftp, joinRemotePath(basePath, name), "");
+    } else if (action === "new-folder") {
+      await mkdirPath(session.sftp, joinRemotePath(basePath, name));
+    } else if (action === "rename") {
+      await renamePath(session.sftp, joinRemotePath(basePath, name), joinRemotePath(basePath, targetName));
+    } else if (action === "delete") {
+      const targetPath = joinRemotePath(basePath, name);
+      const attrs = type ? { isDirectory: () => type === "dir" } : await statPath(session.sftp, targetPath);
+      if (attrs.isDirectory()) await rmdirRecursive(session.sftp, targetPath);
+      else await unlinkPath(session.sftp, targetPath);
+    } else {
+      res.status(400).json({ error: "Unknown file action." });
+      return;
+    }
+    res.json({ ok: true, ...(await listPath(session, basePath)) });
+  } catch (error) {
+    res.status(502).json({ error: error.message || "Unable to complete file action." });
+  }
+});
+
+app.get("/api/sessions/:id/health", async (req, res) => {
+  const session = sessions.get(req.params.id);
+  if (!session) {
+    res.status(404).json({ error: "SSH session is not active. Connect again." });
+    return;
+  }
+
+  try {
+    await exec(session.client, "printf ok");
+    res.json({ ok: true });
+  } catch (error) {
+    sessions.delete(req.params.id);
+    res.status(502).json({ error: error.message || "SSH session health check failed." });
+  }
+});
+
+app.get("/api/sessions/:id/download", async (req, res) => {
+  const session = sessions.get(req.params.id);
+  if (!session) {
+    res.status(404).json({ error: "SSH session is not active. Connect again." });
+    return;
+  }
+
+  try {
+    const remotePath = await realpath(session.sftp, req.query.path);
+    const filename = path.basename(remotePath);
+    const stat = await statPath(session.sftp, remotePath);
+    
+    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(filename)}"`);
+    res.setHeader("Content-Type", "application/octet-stream");
+    res.setHeader("Content-Length", stat.size);
+
+    const stream = session.sftp.createReadStream(remotePath);
+    stream.on("error", (err) => {
+      if (!res.headersSent) {
+        res.status(502).json({ error: err.message || "Failed to download file." });
+      }
+    });
+    stream.pipe(res);
+  } catch (error) {
+    res.status(502).json({ error: error.message || "Unable to download file." });
+  }
+});
+
+app.post("/api/sessions/:id/upload", async (req, res) => {
+  const session = sessions.get(req.params.id);
+  if (!session) {
+    res.status(404).json({ error: "SSH session is not active. Connect again." });
+    return;
+  }
+
+  const { name, path: remoteDir, base64 } = req.body || {};
+  if (!name || !remoteDir || !base64) {
+    res.status(400).json({ error: "Missing name, remote dir path, or Base64 payload." });
+    return;
+  }
+
+  try {
+    const remotePath = joinRemotePath(remoteDir, name);
+    const buffer = Buffer.from(base64, "base64");
+    
+    await writeFile(session.sftp, remotePath, buffer);
+    res.json({ ok: true, ...(await listPath(session, remoteDir)) });
+  } catch (error) {
+    res.status(502).json({ error: error.message || "Unable to upload file." });
+  }
+});
+
 app.post("/api/sessions/:id/disconnect", (req, res) => {
   const session = sessions.get(req.params.id);
   if (session) {
@@ -326,13 +542,62 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-process.on("SIGINT", () => {
+function closeSessions() {
   for (const session of sessions.values()) session.client.end();
-  process.exit(0);
-});
+  sessions.clear();
+}
 
-app.listen(port, () => {
-  const hasPackage = fs.existsSync(path.join(__dirname, "package.json"));
-  console.log(`SSH OS Bridge listening at http://localhost:${port}`);
-  if (!hasPackage) console.log("Run npm install before starting the server.");
-});
+function startServer(options = {}) {
+  const listenPort = Number(options.port ?? process.env.PORT ?? port);
+  if (serverInstance) return Promise.resolve(serverInstance);
+
+  const listen = (targetPort, canFallback) => new Promise((resolve, reject) => {
+    serverInstance = app
+      .listen(targetPort, () => {
+        const address = serverInstance.address();
+        const actualPort = typeof address === "object" && address ? address.port : targetPort;
+        const hasPackage = fs.existsSync(path.join(__dirname, "package.json"));
+        console.log(`SSH OS Bridge listening at http://localhost:${actualPort}`);
+        if (!hasPackage) console.log("Run npm install before starting the server.");
+        resolve(serverInstance);
+      })
+      .on("error", (error) => {
+        serverInstance = null;
+        if (canFallback && error.code === "EADDRINUSE") {
+          console.warn(`Port ${targetPort} is already in use. Falling back to a random free port.`);
+          listen(0, false).then(resolve, reject);
+          return;
+        }
+        reject(error);
+      });
+  });
+
+  return listen(listenPort, listenPort !== 0);
+}
+
+function stopServer() {
+  closeSessions();
+  return new Promise((resolve) => {
+    if (!serverInstance) {
+      resolve();
+      return;
+    }
+    serverInstance.close(() => {
+      serverInstance = null;
+      resolve();
+    });
+  });
+}
+
+if (require.main === module) {
+  process.on("SIGINT", async () => {
+    await stopServer();
+    process.exit(0);
+  });
+  startServer().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
+}
+
+module.exports = { app, startServer, stopServer };

@@ -2,12 +2,50 @@
   "name": "ssh-os-bridge-ui",
   "version": "1.0.0",
   "private": true,
+  "description": "Installable desktop SSH file manager, editor, terminal, and transfer app.",
+  "main": "electron-main.js",
+  "author": "Maran T",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "electron": "electron .",
+    "dist": "electron-builder"
   },
   "dependencies": {
     "express": "^4.19.2",
+    "gsap": "^3.15.0",
     "monaco-editor": "^0.53.0",
     "ssh2": "^1.15.0"
+  },
+  "devDependencies": {
+    "electron": "^42.2.0",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "com.marant.sshosbridge",
+    "productName": "SSH OS Bridge",
+    "files": [
+      "electron-main.js",
+      "server.js",
+      "index.html",
+      "script.js",
+      "styles.css",
+      "package.json",
+      "node_modules/**/*"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   }
 }

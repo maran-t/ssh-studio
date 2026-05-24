@@ -1,0 +1,67 @@
+:root {
+  color-scheme: light;
+  --ink: #0f172a;
+  --muted: #475569;
+  --line: #cbd5e1;
+  --window: rgba(248, 250, 252, 0.85);
+  --window-solid: #f8fafc;
+  --window-2: rgba(241, 245, 249, 0.82);
+  --bar: rgba(15, 23, 42, 0.88);
+  --accent: #0f766e;
+  --accent-dark: #115e59;
+  --ubuntu: #e95420;
+  --windows: #0284c7;
+  --green: #10b981;
+  --shadow-focused: 0 32px 80px rgba(15, 23, 42, 0.38), 0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+  --shadow-unfocused: 0 16px 36px rgba(15, 23, 42, 0.16);
+  --shadow: var(--shadow-unfocused);
+  --glass: rgba(255, 255, 255, 0.78);
+  --glass-focused: rgba(255, 255, 255, 0.86);
+  --glass-unfocused: rgba(248, 250, 252, 0.7);
+  --transition-premium: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Elegant Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.2);
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(71, 85, 105, 0.45);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+body,
+button,
+.window,
+.workspace-bar,
+.taskbar-shell {
+  user-select: none;
+}
+
+input,
+textarea,
+[contenteditable="true"],
