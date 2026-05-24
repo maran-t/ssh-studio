@@ -336,14 +336,45 @@ export function makeWindowsDraggable() {
       const shiftX = event.clientX - windowEl.getBoundingClientRect().left;
       const shiftY = event.clientY - windowEl.getBoundingClientRect().top;
 
+      let snapMode = null;
+
       const onPointerMove = (e) => {
         windowEl.style.left = `${e.clientX - shiftX}px`;
         windowEl.style.top = `${e.clientY - shiftY}px`;
+
+        if (e.clientY <= 10) {
+          snapMode = "top";
+        } else if (e.clientX <= 10) {
+          snapMode = "left";
+        } else if (e.clientX >= window.innerWidth - 10) {
+          snapMode = "right";
+        } else {
+          snapMode = null;
+        }
       };
 
       const onPointerUp = () => {
         document.removeEventListener("pointermove", onPointerMove);
         document.removeEventListener("pointerup", onPointerUp);
+
+        if (snapMode === "top") {
+          maximizeWindow(windowEl.id);
+        } else if (snapMode === "left") {
+          windowEl.classList.remove("maximized");
+          windowEl.style.left = "0px";
+          windowEl.style.top = "0px";
+          windowEl.style.width = "50vw";
+          windowEl.style.height = "calc(100vh - 40px)";
+          if (windowEl.id === "editorWindow" && state.editor) state.editor.layout();
+        } else if (snapMode === "right") {
+          windowEl.classList.remove("maximized");
+          windowEl.style.left = "50vw";
+          windowEl.style.top = "0px";
+          windowEl.style.width = "50vw";
+          windowEl.style.height = "calc(100vh - 40px)";
+          if (windowEl.id === "editorWindow" && state.editor) state.editor.layout();
+        }
+
         persistWindowLayout();
       };
 
@@ -355,40 +386,85 @@ export function makeWindowsDraggable() {
 
 export function makeWindowsResizable() {
   windows().forEach((windowEl) => {
-    let resizer = windowEl.querySelector(".window-resizer, .resize-handle.br");
-    if (!resizer) {
-      resizer = document.createElement("span");
-      resizer.className = "resize-handle br window-resizer";
-      resizer.setAttribute("aria-hidden", "true");
-      windowEl.append(resizer);
-    }
+    const directions = ["t", "b", "l", "r", "tl", "tr", "bl", "br"];
+    directions.forEach((dir) => {
+      let handle = windowEl.querySelector(`.resize-handle.${dir}`);
+      if (!handle) {
+        handle = document.createElement("span");
+        handle.className = `resize-handle ${dir}`;
+        handle.setAttribute("aria-hidden", "true");
+        windowEl.append(handle);
+      }
 
-    resizer.addEventListener("pointerdown", (event) => {
-      event.preventDefault();
-      focusWindow(windowEl.id);
-      windowEl.classList.remove("maximized");
+      handle.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        focusWindow(windowEl.id);
+        windowEl.classList.remove("maximized");
 
-      const startWidth = windowEl.getBoundingClientRect().width;
-      const startHeight = windowEl.getBoundingClientRect().height;
-      const startX = event.clientX;
-      const startY = event.clientY;
+        const rect = windowEl.getBoundingClientRect();
+        const startWidth = rect.width;
+        const startHeight = rect.height;
+        const startLeft = rect.left;
+        const startTop = rect.top;
+        
+        const startX = event.clientX;
+        const startY = event.clientY;
 
-      const onPointerMove = (e) => {
-        const width = startWidth + (e.clientX - startX);
-        const height = startHeight + (e.clientY - startY);
-        windowEl.style.width = `${Math.max(340, width)}px`;
-        windowEl.style.height = `${Math.max(220, height)}px`;
-        if (windowEl.id === "editorWindow" && state.editor) state.editor.layout();
-      };
+        const onPointerMove = (e) => {
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
 
-      const onPointerUp = () => {
-        document.removeEventListener("pointermove", onPointerMove);
-        document.removeEventListener("pointerup", onPointerUp);
-        persistWindowLayout();
-      };
+          let nextWidth = startWidth;
+          let nextHeight = startHeight;
+          let nextLeft = startLeft;
+          let nextTop = startTop;
 
-      document.addEventListener("pointermove", onPointerMove);
-      document.addEventListener("pointerup", onPointerUp);
+          // Horizontal updates
+          if (dir.includes("l")) {
+            const possibleWidth = startWidth - dx;
+            if (possibleWidth >= 340) {
+              nextWidth = possibleWidth;
+              nextLeft = startLeft + dx;
+            }
+          } else if (dir.includes("r")) {
+            const possibleWidth = startWidth + dx;
+            if (possibleWidth >= 340) {
+              nextWidth = possibleWidth;
+            }
+          }
+
+          // Vertical updates
+          if (dir.includes("t")) {
+            const possibleHeight = startHeight - dy;
+            if (possibleHeight >= 220) {
+              nextHeight = possibleHeight;
+              nextTop = startTop + dy;
+            }
+          } else if (dir.includes("b")) {
+            const possibleHeight = startHeight + dy;
+            if (possibleHeight >= 220) {
+              nextHeight = possibleHeight;
+            }
+          }
+
+          windowEl.style.width = `${nextWidth}px`;
+          windowEl.style.height = `${nextHeight}px`;
+          windowEl.style.left = `${nextLeft}px`;
+          windowEl.style.top = `${nextTop}px`;
+
+          if (windowEl.id === "editorWindow" && state.editor) state.editor.layout();
+        };
+
+        const onPointerUp = () => {
+          document.removeEventListener("pointermove", onPointerMove);
+          document.removeEventListener("pointerup", onPointerUp);
+          persistWindowLayout();
+        };
+
+        document.addEventListener("pointermove", onPointerMove);
+        document.addEventListener("pointerup", onPointerUp);
+      });
     });
   });
 }

@@ -293,29 +293,69 @@
             <button class="traffic-control maximize-control" type="button" data-maximize-window="editorWindow" aria-label="Maximize Editor" title="Maximize"></button>
           </div>
           <h2 id="editorTitle">Editor</h2>
+          <div class="editor-menu-bar" aria-label="Editor menu bar">
+            <button type="button">File</button>
+            <button type="button">Edit</button>
+            <button type="button">Selection</button>
+            <button type="button">View</button>
+            <button type="button">Go</button>
+            <button type="button">Run</button>
+            <button type="button">Terminal</button>
+            <button type="button">Help</button>
+          </div>
+          <div class="editor-command-center">create-a-ssh-app-ui-based</div>
           <div class="window-actions"></div>
         </div>
-        <div class="editor-workbench">
+        <div class="editor-workbench" data-editor-view="explorer">
+          <nav class="editor-activity-bar" aria-label="Editor activity bar">
+            <button class="editor-activity-item active" type="button" data-editor-view="explorer" title="Explorer" aria-label="Explorer">⧉</button>
+            <button class="editor-activity-item" type="button" data-editor-view="search" title="Search" aria-label="Search">⌕</button>
+            <button class="editor-activity-item" type="button" data-editor-view="settings" title="Settings" aria-label="Settings">⚙</button>
+            <button class="editor-activity-item" type="button" data-editor-view="keybindings" title="Keyboard Shortcuts" aria-label="Keyboard Shortcuts">⌨</button>
+          </nav>
           <aside class="editor-side">
-            <div class="editor-side-section">
+            <div class="editor-side-section editor-view-panel active" data-editor-panel="explorer">
               <div class="editor-side-title-row">
                 <span class="editor-side-title">Explorer</span>
-                <button id="editorCloseAllButton" class="editor-icon-action" type="button" title="Close all editor tabs">...</button>
-              </div>
-              <div class="editor-open-list" id="editorOpenList"></div>
-            </div>
-            <div class="editor-side-section editor-folder-section">
-              <div class="editor-side-title-row">
-                <span class="editor-side-title">Current Folder</span>
                 <div>
-                  <button id="editorRefreshExplorerButton" type="button" title="Refresh folder">Refresh</button>
-                  <button id="editorNewFileButton" type="button" title="New file">File</button>
-                  <button id="editorNewFolderButton" type="button" title="New folder">Folder</button>
+                  <button id="editorNewFileButton" type="button" title="New File..."></button>
+                  <button id="editorNewFolderButton" type="button" title="New Folder..."></button>
+                  <button id="editorRefreshExplorerButton" type="button" title="Refresh Explorer"></button>
+                  <button id="editorCloseAllButton" type="button" title="Collapse Folders in Explorer"></button>
+                  <button id="editorMoreActionsButton" type="button" title="More Actions...">⋯</button>
                 </div>
               </div>
+              <div class="editor-open-list" id="editorOpenList"></div>
               <input id="editorExplorerSearch" type="search" placeholder="Filter files" autocomplete="off" spellcheck="false" />
               <div class="editor-folder-path" id="editorFolderPath">No folder open</div>
               <div class="editor-folder-list" id="editorFolderList"></div>
+            </div>
+            <div class="editor-side-section editor-view-panel" data-editor-panel="search">
+              <div class="editor-side-title-row">
+                <span class="editor-side-title">Search</span>
+              </div>
+              <input class="editor-side-input" id="editorWorkbenchSearch" type="search" placeholder="Search" autocomplete="off" spellcheck="false" />
+              <input class="editor-side-input" id="editorWorkbenchReplace" type="search" placeholder="Replace" autocomplete="off" spellcheck="false" />
+              <div class="editor-side-empty">Search is scoped to open files for now.</div>
+            </div>
+            <div class="editor-side-section editor-view-panel" data-editor-panel="settings">
+              <div class="editor-side-title-row">
+                <span class="editor-side-title">Settings</span>
+              </div>
+              <div class="editor-settings-toc">
+                <button class="active" type="button" data-settings-target="commonly-used">Commonly Used</button>
+                <button type="button" data-settings-target="text-editor">Text Editor</button>
+                <button type="button" data-settings-target="workbench">Workbench</button>
+              </div>
+            </div>
+            <div class="editor-side-section editor-view-panel" data-editor-panel="keybindings">
+              <div class="editor-side-title-row">
+                <span class="editor-side-title">Keyboard Shortcuts</span>
+              </div>
+              <div class="editor-settings-toc">
+                <button class="active" type="button">Default Keybindings</button>
+                <button type="button">User Keybindings</button>
+              </div>
             </div>
             <div class="editor-side-section editor-side-actions">
               <button id="commandPaletteButton" type="button">Command Palette</button>
@@ -333,9 +373,62 @@
               <span id="editorStatus">Read/write over SFTP</span>
             </div>
             <div class="editor-canvas">
+              <div id="editorSettingsWorkbench" class="editor-preferences hidden">
+                <div class="settings-editor">
+                  <div class="settings-header">
+                    <input id="editorSettingsSearch" type="search" placeholder="Search settings" autocomplete="off" spellcheck="false" />
+                    <div class="settings-tabs">
+                      <button class="active" type="button">User</button>
+                      <button type="button">Workspace</button>
+                    </div>
+                  </div>
+                  <div class="settings-body">
+                    <section class="setting-row">
+                      <div>
+                        <strong>Editor: Font Size</strong>
+                        <span>Controls the font size in pixels.</span>
+                      </div>
+                      <input id="editorFontSizeSetting" type="number" min="10" max="24" value="13" />
+                    </section>
+                    <section class="setting-row">
+                      <div>
+                        <strong>Editor: Minimap Enabled</strong>
+                        <span>Controls whether the minimap is shown.</span>
+                      </div>
+                      <input id="editorMinimapSetting" type="checkbox" />
+                    </section>
+                    <section class="setting-row">
+                      <div>
+                        <strong>Workbench: Color Theme</strong>
+                        <span>Specifies the color theme used in the editor.</span>
+                      </div>
+                      <select id="editorThemeSetting">
+                        <option value="m2-dark">M2 Dark</option>
+                        <option value="vs-dark">Dark+</option>
+                        <option value="vs">Light+</option>
+                      </select>
+                    </section>
+                  </div>
+                </div>
+              </div>
+              <div id="editorKeybindingsWorkbench" class="editor-keybindings hidden">
+                <div class="keybindings-editor">
+                  <div class="keybindings-header">
+                    <input id="editorKeybindingsSearch" type="search" placeholder="Type to search in keybindings" autocomplete="off" spellcheck="false" />
+                    <button type="button" id="openKeybindingsJsonButton">{}</button>
+                  </div>
+                  <div class="keybindings-table">
+                    <div class="keybinding-row head"><span>Command</span><span>Keybinding</span><span>When</span></div>
+                    <div class="keybinding-row"><span>Command Palette</span><kbd>Ctrl+Shift+P</kbd><span>editorTextFocus</span></div>
+                    <div class="keybinding-row"><span>Quick Open</span><kbd>Ctrl+P</kbd><span>editorTextFocus</span></div>
+                    <div class="keybinding-row"><span>Save Current File</span><kbd>Ctrl+S</kbd><span>editorHasModel</span></div>
+                    <div class="keybinding-row"><span>Toggle Explorer</span><kbd>Ctrl+Shift+E</kbd><span>workbenchFocus</span></div>
+                  </div>
+                </div>
+              </div>
               <div id="editorWelcome" class="editor-welcome">
                 <div class="welcome-hero">
-                  <strong>MSquare Editor</strong>
+                  <strong>Visual Editor</strong>
                   <span>Open a remote folder or pick a recent workspace to start editing.</span>
                 </div>
                 <div class="welcome-grid">

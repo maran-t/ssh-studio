@@ -30,6 +30,7 @@ export const state = {
   currentSortColumn: "name",
   currentSortDirection: "asc",
   terminalFontSize: 13,
+  editorFontSize: Number(localStorage.getItem("sshBridgeEditorFontSize") || 13),
   editorTheme: localStorage.getItem("sshBridgeEditorTheme") || "m2-dark",
   isEditorMinimapEnabled: localStorage.getItem("sshBridgeEditorMinimap") !== "false",
 

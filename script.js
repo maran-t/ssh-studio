@@ -34,7 +34,8 @@ import {
   openRemoteFile, saveCurrentFile, updateEditorWelcome, updateEditorToolbarState,
   inferLanguage, formatLanguageLabel, updateEditorStatusBar, openEditorExplorerPath,
   renderEditorExplorer, toggleEditorTheme, toggleEditorMinimap, openCommandPalette,
-  closeCommandPalette, renderCommandPalette, editorThemes, initializeEditorExplorerResize
+  closeCommandPalette, renderCommandPalette, editorThemes, initializeEditorExplorerResize,
+  setEditorWorkbenchView, applyEditorFontSize, updateEditorThemeClass
 } from './js/editor.js';
 import {
   parseAnsiColors, renderTerminalLog, pushTerminal, command, updateTerminalPrompt,
@@ -294,6 +295,18 @@ document.querySelector("#transferChoosePath")?.addEventListener("click", async (
 
 // 5. Monaco Ctrl+S Save hook
 document.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "e") {
+    e.preventDefault();
+    focusWindow("editorWindow");
+    setEditorWorkbenchView("explorer");
+    return;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === ",") {
+    e.preventDefault();
+    focusWindow("editorWindow");
+    setEditorWorkbenchView("settings");
+    return;
+  }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
     const activeWindow = document.querySelector(".focused");
     if (activeWindow && activeWindow.id === "editorWindow") {
@@ -570,6 +583,26 @@ document.querySelector("#findReplaceButton")?.addEventListener("click", () => {
 });
 document.querySelector("#themeToggleButton")?.addEventListener("click", toggleEditorTheme);
 document.querySelector("#minimapToggleButton")?.addEventListener("click", toggleEditorMinimap);
+document.querySelectorAll(".editor-activity-item").forEach((button) => {
+  button.addEventListener("click", () => {
+    setEditorWorkbenchView(button.dataset.editorView || "explorer");
+    focusWindow("editorWindow");
+  });
+});
+document.querySelector("#editorFontSizeSetting")?.addEventListener("change", (event) => {
+  applyEditorFontSize(event.target.value);
+});
+document.querySelector("#editorMinimapSetting")?.addEventListener("change", (event) => {
+  state.isEditorMinimapEnabled = Boolean(event.target.checked);
+  localStorage.setItem("sshBridgeEditorMinimap", String(state.isEditorMinimapEnabled));
+  state.editor?.updateOptions({ minimap: { enabled: state.isEditorMinimapEnabled } });
+});
+document.querySelector("#editorThemeSetting")?.addEventListener("change", (event) => {
+  state.editorTheme = event.target.value;
+  localStorage.setItem("sshBridgeEditorTheme", state.editorTheme);
+  monaco?.editor?.setTheme(state.editorTheme);
+  updateEditorThemeClass();
+});
 document.querySelector("#welcomeOpenFolderButton")?.addEventListener("click", () => {
   openEditorExplorerPath(state.editorExplorerPath || state.currentPath || state.session?.startPath || ".");
 });
