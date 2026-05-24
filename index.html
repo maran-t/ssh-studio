@@ -293,8 +293,8 @@
           <aside class="editor-side">
             <div class="editor-side-section">
               <div class="editor-side-title-row">
-                <span class="editor-side-title">Open Editors</span>
-                <button id="editorCloseAllButton" type="button" title="Close all editor tabs">Clear</button>
+                <span class="editor-side-title">Explorer</span>
+                <button id="editorCloseAllButton" class="editor-icon-action" type="button" title="Close all editor tabs">...</button>
               </div>
               <div class="editor-open-list" id="editorOpenList"></div>
             </div>
@@ -345,7 +345,7 @@
                   </section>
                 </div>
               </div>
-              <div id="monacoEditor" class="monaco-host"></div>
+              <div id="monacoEditor" class="monaco-host hidden"></div>
             </div>
           </section>
         </div>
@@ -380,18 +380,6 @@
           <h2 id="terminalTitle">Terminal</h2>
           <!-- <button id="clearLogButton" type="button">Clear</button> -->
         </div>
-        <div class="terminal-toolbar">
-          <div class="terminal-search-box">
-            <input id="terminalSearch" type="search" placeholder="Search logs..." autocomplete="off" spellcheck="false" />
-          </div>
-          <div class="terminal-font-controls" style="margin-left: auto;">
-            <button id="terminalZoomOut" type="button" title="Decrease font size">-</button>
-            <span id="terminalFontSizeLabel">13px</span>
-            <button id="terminalZoomIn" type="button" title="Increase font size">+</button>
-            <span class="toolbar-separator">|</span>
-            <button id="toggleHistoryBtn" class="history-toggle-btn" type="button" title="Command History">📜</button>
-          </div>
-        </div>
         <div class="terminal-body" id="terminalBody">
           <div id="terminalLog" aria-live="polite"></div>
           <div class="terminal-command-inline" id="terminalForm">
@@ -400,16 +388,6 @@
             <button id="runCommandButton" type="button" style="display:none;">Run</button>
           </div>
         </div>
-        <!-- Terminal Command History Panel -->
-        <aside id="terminalHistoryPanel" class="terminal-history-panel hidden">
-          <div class="history-panel-header">
-            <h3>Command History</h3>
-            <button id="closeHistoryBtn" type="button" title="Close Panel">&times;</button>
-          </div>
-          <div class="history-panel-list" id="historyPanelList">
-            <div class="history-empty-message">No commands run yet</div>
-          </div>
-        </aside>
       </section>
 
       <aside class="window transfer-window minimized" id="transferWindow" aria-labelledby="transferTitle">
@@ -527,6 +505,6 @@
 
     <script src="./node_modules/gsap/dist/gsap.min.js"></script>
     <script src="./node_modules/monaco-editor/min/vs/loader.js"></script>
-    <script src="./script.js"></script>
+    <script type="module" src="./script.js"></script>
   </body>
 </html>

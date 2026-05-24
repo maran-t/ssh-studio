@@ -1,0 +1,46 @@
+export const state = {
+  currentPath: "",
+  terminalCwd: "",
+  editorExplorerPath: "",
+  editorExplorerItems: [],
+  editorExplorerTreeCache: new Map(),
+  editorExplorerExpanded: new Set(),
+  editorExplorerLoading: new Set(),
+  transferPath: "",
+  selected: new Set(),
+  session: null,
+  currentItems: [],
+  allDirectoryItems: [], // Pristine cache of all items in current folder
+  openFilePath: "",
+  editor: null,
+  healthTimer: null,
+  commandHistoryIndex: -1,
+  openFiles: new Map(),
+  commandHistory: [],
+  logLines: [],
+  topZIndex: 50,
+  isAnimationEnabled: localStorage.getItem("sshBridgeAnimations") !== "false",
+
+  // Path history and lists
+  pathHistoryBack: [],
+  pathHistoryForward: [],
+  lastSelectedIndex: -1,
+  isGridView: false,
+  showHiddenFiles: false, // Hidden files toggle state
+  currentSortColumn: "name",
+  currentSortDirection: "asc",
+  terminalFontSize: 13,
+  editorTheme: localStorage.getItem("sshBridgeEditorTheme") || "m2-dark",
+  isEditorMinimapEnabled: localStorage.getItem("sshBridgeEditorMinimap") !== "false",
+
+  // Context Menu and switcher state
+  activeItemForFileContext: null,
+  activeTabForContext: null,
+  isAltTabOpen: false,
+  altTabItems: [],
+  altTabIndex: 0,
+  altTabCloseKey: "Alt",
+  launchedWindowIds: new Set(),
+  autoConnectTimer: null,
+  countdownVal: 5,
+};

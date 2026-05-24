@@ -1,215 +1,472 @@
-.settings-window {
-  left: 150px;
-  bottom: 88px;
-  width: 340px;
-  min-width: 300px;
-}
-
-.window-titlebar {
-  display: grid;
-  grid-template-columns: 72px 1fr auto;
-  align-items: center;
-  height: 46px;
-  border-bottom: 1px solid rgba(207, 215, 226, 0.74);
-  background: rgba(255, 255, 255, 0.66);
-  padding: 0 12px;
-  cursor: default;
-}
-
-.dark-title {
-  border-bottom-color: rgba(255, 255, 255, 0.12);
-  background: rgba(32, 42, 53, 0.88);
-  color: #e9f2fb;
-}
-
-.traffic {
+.connect-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
   display: flex;
-  gap: 7px;
-}
-
-.traffic span,
-.traffic-control {
-  width: 13px;
-  height: 13px;
-  border-radius: 50%;
-}
-
-.traffic-control {
-  min-height: 13px;
-  border: 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
+  flex-direction: column;
   justify-content: center;
-  position: relative;
-}
-
-.traffic-control::after {
-  font-size: 7.5px;
-  font-weight: 900;
-  opacity: 0;
-  color: rgba(15, 23, 42, 0.65);
-  transition: opacity 0.12s ease;
-  line-height: 1;
-}
-
-.traffic:hover .traffic-control::after {
+  align-items: center;
+  background: rgba(10, 15, 24, 0.45);
+  backdrop-filter: blur(40px) saturate(1.4);
   opacity: 1;
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), backdrop-filter 0.3s ease;
+  animation: login-panel-fade 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  padding: 40px 20px;
 }
 
-.close-control::after {
-  content: "✕";
+@keyframes login-panel-fade {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(40px) saturate(1.4);
+  }
 }
 
-.minimize-control::after {
-  content: "−";
+.connect-panel.hidden {
+  display: none !important;
 }
 
-.maximize-control::after {
-  content: "⤢";
-  font-size: 6px;
+.connect-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: min(390px, 100%);
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  color: #fff;
+  animation: login-card-reveal 0.36s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  margin: auto;
 }
 
-.traffic-control:hover {
-  filter: brightness(0.85);
+@keyframes login-card-reveal {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-.traffic-control:focus-visible {
-  outline: 2px solid var(--windows);
-  outline-offset: 2px;
-}
-
-h1,
-h2 {
-  margin: 0;
-  overflow: hidden;
+.login-avatar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
+}
+
+.login-avatar {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.12);
+  margin-bottom: 18px;
+  color: #fff;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+}
+
+.avatar-glow {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(2, 132, 199, 0.35) 0%, transparent 70%);
+  animation: avatar-pulse 3s infinite ease-in-out;
+}
+
+@keyframes avatar-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+
+.ssh-lock-icon {
+  width: 38px;
+  height: 38px;
+  color: rgba(255, 255, 255, 0.95);
+  filter: drop-shadow(0 4px 12px rgba(2, 132, 199, 0.45));
+}
+
+.connect-card h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+}
+
+.login-subtitle {
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 6px 0 0 0;
+  font-weight: 500;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dialog-close {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 20px;
+  line-height: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.dialog-close:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ff6b6b;
+  transform: scale(1.08);
+}
+
+.login-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.login-field {
+  width: 100%;
+}
+
+.login-field input,
+.login-field textarea {
+  width: 100%;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 21px;
+  padding: 0 20px;
+  background: rgba(0, 0, 0, 0.22);
+  color: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  outline: none;
+  text-align: center;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(10px);
+}
+
+.login-field input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.login-field input:focus,
+.login-field textarea:focus {
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  background: rgba(0, 0, 0, 0.32) !important;
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.18) !important;
+}
+
+/* Collapsible advanced menu styled beautifully */
+.advanced-settings {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(10px);
+}
+
+.advanced-settings[open] {
+  background: rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.advanced-settings summary {
+  padding: 12px 18px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  text-align: center;
+  transition: color 0.2s;
+}
+
+.advanced-settings summary:hover {
+  color: #fff;
+}
+
+.advanced-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 16px 16px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.advanced-grid .login-field input {
+  height: 36px;
+  border-radius: 18px;
+  font-size: 12.5px;
+  padding: 0 14px;
+}
+
+/* PEM file picker pill layout */
+.key-selector-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.pem-pill-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.pem-pill-button {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 21px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  padding: 0 16px;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 14px;
 }
 
-.window-actions {
-  display: flex;
-  gap: 7px;
-}
-
-.window-titlebar button,
-.copy-button {
-  min-height: 30px;
-  border: 1px solid var(--line);
-  border-radius: 9px;
-  background: rgba(255, 255, 255, 0.84);
-  color: var(--ink);
-  font-weight: 700;
-  transition: var(--transition-premium);
-}
-
-.window-titlebar button {
-  cursor: pointer;
-  padding: 0 12px;
-}
-
-.window-titlebar button:hover,
-.copy-button:hover {
-  background: #ffffff;
-  border-color: rgba(2, 132, 199, 0.4);
+.pem-pill-button:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
-.window-titlebar button:active,
-.copy-button:active {
-  transform: translateY(0);
-  box-shadow: none;
+.pem-pill-button input {
+  display: none;
 }
 
-.window-titlebar .traffic-control {
-  min-height: 13px;
-  border: 0;
+.key-text-toggle-btn {
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  padding: 0;
-}
-
-.window-titlebar .close-control {
-  background: #ef5f57;
-}
-
-.window-titlebar .minimize-control {
-  background: #f2bd45;
-}
-
-.window-titlebar .maximize-control {
-  background: #58c46b;
-}
-
-.task-app.minimized {
-  opacity: 0.72;
-}
-
-.task-app.closed {
-  opacity: 0.5;
-}
-
-.file-toolbar {
-  display: grid;
-  gap: 0;
-  padding: 0;
-  border-bottom: 1px solid var(--line);
-  background: var(--window-2);
-}
-
-.file-address-row,
-.file-command-row {
-  display: grid;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-}
-
-.file-address-row {
-  grid-template-columns: auto minmax(0, 1fr);
-}
-
-.file-command-row {
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
-  background: rgba(245, 248, 252, 0.72);
-}
-
-.file-nav-group,
-.file-actions {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 15px;
   display: flex;
+  justify-content: center;
   align-items: center;
-  gap: 6px;
-  position: relative;
-}
-
-.file-nav-group button,
-.file-actions button,
-.file-menu summary {
-  min-height: 28px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  padding: 0 9px;
-  background: rgba(255, 255, 255, 0.84);
-  color: var(--ink);
-  font-size: 12px;
-  font-weight: 800;
   cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
 }
 
-.file-nav-group {
-  padding-right: 2px;
+.key-text-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: scale(1.06);
 }
 
-.file-address-bar {
+.textarea-container {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.28);
+  padding: 12px;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.textarea-container.hidden {
+  display: none !important;
+}
+
+.textarea-container textarea {
+  width: 100%;
+  height: 96px;
+  background: transparent;
+  border: none !important;
+  color: #74d89a;
+  font-family: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  font-size: 11px;
+  resize: none;
+  outline: none;
+  line-height: 1.4;
+  text-align: left;
+}
+
+/* Passphrase custom height */
+.passphrase-field input {
+  height: 42px;
+  border-radius: 21px;
+}
+
+.connect-actions {
   display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin-top: 6px;
   align-items: center;
-  min-width: 0;
-  min-height: 34px;
-  border: 1px solid rgba(148, 163, 184, 0.26);
-  border-radius: 8px;
-  padding: 0 8px;
-  background: rgba(255, 255, 255, 0.55);
 }
+
+.connect-actions button {
+  width: 150px;
+  min-height: 42px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 21px;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(10px);
+}
+
+.connect-actions button:hover {
+  transform: translateY(-1.5px);
+  background: rgba(255, 255, 255, 0.24);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25), 0 0 0 1.5px rgba(255, 255, 255, 0.2) inset;
+}
+
+.connect-actions button:active {
+  transform: translateY(0.5px);
+}
+
+.connect-actions button:disabled {
+  cursor: wait;
+  opacity: 0.5;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+#stopAutoConnectBtn {
+  width: 150px;
+  min-height: 28px;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 14px;
+  background: rgba(239, 68, 68, 0.15);
+  color: #ff8a8a;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+  margin-top: -6px;
+}
+
+#stopAutoConnectBtn:hover {
+  background: rgba(239, 68, 68, 0.28);
+  border-color: rgba(239, 68, 68, 0.6);
+  transform: translateY(-0.5px);
+}
+
+#stopAutoConnectBtn.hidden {
+  display: none !important;
+}
+
+#connectMessage {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+#connectMessage[data-tone="success"] {
+  color: #74d89a;
+  text-shadow: 0 2px 10px rgba(116, 216, 154, 0.25);
+}
+
+#connectMessage[data-tone="error"] {
+  color: #ff9b9b;
+  text-shadow: 0 2px 10px rgba(255, 155, 155, 0.25);
+}
+
+/* Bottom macOS Utility Action buttons */
+.login-bottom-utilities {
+  display: flex;
+  justify-content: center;
+  gap: 36px;
+  margin-top: auto;
+  padding-bottom: 24px;
+}
+
+.utility-circle-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.utility-circle-btn .btn-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 16px;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(10px);
+}
+
+.utility-circle-btn:hover .btn-icon {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.utility-circle-btn .btn-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.4px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.utility-circle-btn:hover .btn-label {
+  color: #fff;
+}
+

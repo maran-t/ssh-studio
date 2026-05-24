@@ -13,7 +13,7 @@
   "dependencies": {
     "express": "^4.19.2",
     "gsap": "^3.15.0",
-    "monaco-editor": "^0.53.0",
+    "monaco-editor": "0.52.2",
     "ssh2": "^1.15.0"
   },
   "devDependencies": {
@@ -28,6 +28,8 @@
       "server.js",
       "index.html",
       "script.js",
+      "js/**/*",
+      "css/**/*",
       "styles.css",
       "package.json",
       "node_modules/**/*"
