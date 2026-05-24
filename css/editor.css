@@ -28,7 +28,15 @@
   align-items: center;
   gap: 2px;
   min-width: 0;
+  opacity: 0;
+  pointer-events: none;
+  /* transition: opacity 0.15s ease-in-out; */
 }
+
+/* .editor-titlebar:hover .editor-menu-bar {
+  opacity: 1;
+  pointer-events: auto;
+} */
 
 .editor-product-mark {
   display: grid;
