@@ -67,6 +67,11 @@ document.body.append(taskbarTooltip);
 // Setup Event Listeners
 
 // 1. Connection Event Listeners
+function closeConnectionSurface() {
+  document.querySelector("#connectPanel")?.classList.add("hidden");
+  cancelAutoConnect();
+}
+
 function openConnectionSurface() {
   if (state.session) {
     focusWindow("settingsWindow");
@@ -78,16 +83,12 @@ function openConnectionSurface() {
 connectForm?.addEventListener("submit", connect);
 disconnectButton?.addEventListener("submit", (e) => e.preventDefault()); // Disconnect is a button, not form, but to be safe
 disconnectButton?.addEventListener("click", disconnectSession);
-closeConnectButton?.addEventListener("click", () => {
-  document.querySelector("#connectPanel")?.classList.add("hidden");
-  cancelAutoConnect();
-});
+closeConnectButton?.addEventListener("click", closeConnectionSurface);
 document.querySelector("#connectionToggle")?.addEventListener("click", openConnectionSurface);
 document.querySelector("#trayConnectionPill")?.addEventListener("click", openConnectionSurface);
-document.addEventListener("click", (event) => {
-  if (!event.target.closest("#connectionToggle, #trayConnectionPill")) return;
-  openConnectionSurface();
-}, true);
+document.querySelector("#connectPanel")?.addEventListener("click", (event) => {
+  if (event.target === event.currentTarget) closeConnectionSurface();
+});
 stopAutoConnectBtn?.addEventListener("click", cancelAutoConnect);
 toggleKeyTextarea?.addEventListener("click", () => {
   textareaContainer?.classList.toggle("hidden");
@@ -800,6 +801,7 @@ window.addEventListener("keydown", (event) => {
     openAltTabSwitcher(-1);
   } else if (event.key === "Escape") {
     if (state.isAltTabOpen) closeAltTabSwitcher(false);
+    if (!document.querySelector("#connectPanel")?.classList.contains("hidden")) closeConnectionSurface();
     closeCommandPalette();
   }
 });
@@ -822,8 +824,10 @@ setInterval(() => {
 }, 1000);
 
 function keepBarOpenAfterLeave(element, openClass) {
-  if (!element) return;
+  if (!element) return null;
   let closeTimer = null;
+  let isHovering = false;
+  let isFocused = false;
   const closeDelay = 4500;
 
   const openBar = () => {
@@ -831,25 +835,52 @@ function keepBarOpenAfterLeave(element, openClass) {
     element.classList.add(openClass);
   };
 
-  const scheduleClose = () => {
-    clearTimeout(closeTimer);
-    closeTimer = setTimeout(() => {
-      element.classList.remove(openClass);
-    }, closeDelay);
+  const closeIfInactive = () => {
+    if (!isHovering && !isFocused) element.classList.remove(openClass);
   };
 
-  element.addEventListener("mouseenter", openBar);
-  element.addEventListener("focusin", openBar);
-  element.addEventListener("mouseleave", scheduleClose);
-  element.addEventListener("focusout", scheduleClose);
+  const scheduleClose = (delay = closeDelay) => {
+    clearTimeout(closeTimer);
+    closeTimer = setTimeout(closeIfInactive, delay);
+  };
+
+  element.addEventListener("mouseenter", () => {
+    isHovering = true;
+    openBar();
+  });
+  element.addEventListener("focusin", () => {
+    isFocused = true;
+    openBar();
+  });
+  element.addEventListener("mouseleave", () => {
+    isHovering = false;
+    scheduleClose();
+  });
+  element.addEventListener("focusout", () => {
+    isFocused = element.contains(document.activeElement);
+    scheduleClose();
+  });
   scheduleClose();
+
+  return {
+    revealTransient(delay = closeDelay) {
+      openBar();
+      scheduleClose(delay);
+    },
+    closeSoon(delay = 700) {
+      scheduleClose(delay);
+    },
+  };
 }
 
-keepBarOpenAfterLeave(workspaceBar, "bar-open");
-keepBarOpenAfterLeave(taskbarShell, "taskbar-open");
+const workspaceBarAutoHide = keepBarOpenAfterLeave(workspaceBar, "bar-open");
+const taskbarAutoHide = keepBarOpenAfterLeave(taskbarShell, "taskbar-open");
 document.querySelector(".remote-desktop")?.addEventListener("pointermove", (event) => {
-  if (event.clientY <= 18) workspaceBar?.classList.add("bar-open");
-  if (window.innerHeight - event.clientY <= 24) taskbarShell?.classList.add("taskbar-open");
+  if (event.clientY <= 18) workspaceBarAutoHide?.revealTransient();
+  else workspaceBarAutoHide?.closeSoon();
+
+  if (window.innerHeight - event.clientY <= 24) taskbarAutoHide?.revealTransient();
+  else taskbarAutoHide?.closeSoon();
 });
 
 // Drag observer layouts

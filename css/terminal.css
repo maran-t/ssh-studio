@@ -412,11 +412,11 @@
   justify-content: center;
   gap: 0;
   position: relative;
-  width: 42px;
-  height: 42px;
-  min-height: 42px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: 11px;
   background: transparent;
   color: #223044;
   font-size: 12px;
@@ -450,41 +450,82 @@
 }
 
 .task-icon {
-  width: 21px;
-  height: 21px;
+  width: 31px;
+  height: 31px;
   fill: currentColor;
-  flex: 0 0 21px;
+  flex: 0 0 31px;
+  border-radius: 9px;
+  padding: 5px;
+  filter: drop-shadow(0 5px 8px rgba(15, 23, 42, 0.16));
 }
 
 .start-button {
-  background: linear-gradient(135deg, rgba(0, 120, 212, 0.12), rgba(57, 166, 106, 0.1));
-  border-color: rgba(0, 120, 212, 0.08);
-  color: #0f5f9f;
+  color: #fff;
+}
+
+.start-button .task-icon {
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0 50%, transparent 50%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0 50%, transparent 50%),
+    linear-gradient(135deg, #28a7ff, #0067c0);
+}
+
+.task-files {
+  --app-icon-bg: linear-gradient(180deg, #ffd66e 0 36%, #f5b544 36% 100%);
+  --app-icon-color: #8b5a00;
+}
+
+.task-editor {
+  --app-icon-bg: linear-gradient(135deg, #40b8ff, #0667d8 58%, #063f9c);
+  --app-icon-color: #ffffff;
+}
+
+.task-terminal {
+  --app-icon-bg: linear-gradient(135deg, #263445, #07111b);
+  --app-icon-color: #e3fbef;
+}
+
+.task-transfer {
+  --app-icon-bg: linear-gradient(135deg, #c6f6d5, #22c55e 50%, #078044);
+  --app-icon-color: #064e3b;
+}
+
+.task-connection {
+  --app-icon-bg: linear-gradient(135deg, #f1f5f9, #94a3b8);
+  --app-icon-color: #263244;
+}
+
+.task-app .app-icon {
+  background: var(--app-icon-bg);
+  color: var(--app-icon-color);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.52) inset,
+    0 8px 14px rgba(15, 23, 42, 0.13);
 }
 
 .task-app.active {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(224, 241, 255, 0.86)),
-    rgba(0, 120, 212, 0.14);
-  color: #005da8;
-  border-color: rgba(0, 120, 212, 0.24);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(222, 236, 252, 0.7)),
+    rgba(0, 120, 212, 0.08);
+  color: #1e293b;
+  border-color: rgba(15, 23, 42, 0.08);
   box-shadow:
-    0 10px 22px rgba(0, 85, 150, 0.14),
+    0 10px 22px rgba(15, 23, 42, 0.12),
     0 0 0 1px rgba(255, 255, 255, 0.7) inset;
 }
 
 .task-app.open {
-  background: rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.5);
   color: #223044;
-  border-color: rgba(144, 160, 180, 0.16);
-  box-shadow: 0 8px 18px rgba(20, 34, 54, 0.08);
+  border-color: rgba(144, 160, 180, 0.12);
+  box-shadow: 0 8px 18px rgba(20, 34, 54, 0.07);
 }
 
 .task-app.minimized {
-  background: rgba(241, 245, 249, 0.54);
+  background: transparent;
   color: #64748b;
-  border-color: rgba(148, 163, 184, 0.14);
-  opacity: 0.88;
+  border-color: transparent;
+  opacity: 0.92;
 }
 
 .task-app.closed {
@@ -497,9 +538,12 @@
 
 .task-app:hover,
 .start-button:hover {
-  background: rgba(255, 255, 255, 0.86);
-  border-color: rgba(144, 160, 180, 0.18);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(144, 160, 180, 0.16);
+  transform: translateY(-2px);
+  box-shadow:
+    0 10px 20px rgba(15, 23, 42, 0.1),
+    0 0 0 1px rgba(255, 255, 255, 0.7) inset;
 }
 
 .task-app::after {
@@ -507,7 +551,7 @@
   display: block;
   position: absolute;
   left: 50%;
-  bottom: 4px;
+  bottom: -1px;
   width: 4px;
   height: 4px;
   border-radius: 999px;
@@ -521,15 +565,15 @@
 }
 
 .task-app.active::after {
-  width: 9px;
+  width: 16px;
   height: 4px;
-  background: #5f6f84;
+  background: #2563eb;
 }
 
 .task-app.open::after {
-  width: 4px;
+  width: 7px;
   height: 4px;
-  background: #7a8798;
+  background: #64748b;
 }
 
 .task-app.minimized::after {

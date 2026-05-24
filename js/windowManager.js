@@ -305,6 +305,11 @@ export function makeWindowsDraggable() {
     const titlebar = windowEl.querySelector(".window-titlebar");
     if (!titlebar) return;
 
+    windowEl.addEventListener("pointerdown", (event) => {
+      if (event.button !== 0 || windowEl.classList.contains("focused")) return;
+      focusWindow(windowEl.id);
+    }, { capture: true });
+
     titlebar.addEventListener("dblclick", (event) => {
       if (event.target.closest("button")) return;
       maximizeWindow(windowEl.id);
