@@ -416,7 +416,7 @@
   height: 44px;
   min-height: 44px;
   border: 1px solid transparent;
-  border-radius: 11px;
+  border-radius: 13px;
   background: transparent;
   color: #223044;
   font-size: 12px;
@@ -450,13 +450,13 @@
 }
 
 .task-icon {
-  width: 31px;
-  height: 31px;
+  width: 33px;
+  height: 33px;
   fill: currentColor;
-  flex: 0 0 31px;
-  border-radius: 9px;
+  flex: 0 0 33px;
+  border-radius: 11px;
   padding: 5px;
-  filter: drop-shadow(0 5px 8px rgba(15, 23, 42, 0.16));
+  filter: drop-shadow(0 5px 10px rgba(15, 23, 42, 0.1));
 }
 
 .start-button {
@@ -465,42 +465,53 @@
 
 .start-button .task-icon {
   background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.2) 0 50%, transparent 50%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.2) 0 50%, transparent 50%),
-    linear-gradient(135deg, #28a7ff, #0067c0);
+    linear-gradient(90deg, rgba(255, 255, 255, 0.22) 0 50%, transparent 50%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0 50%, transparent 50%),
+    linear-gradient(135deg, #62b7ee, #2f7ec7 58%, #2563a7);
 }
 
 .task-files {
-  --app-icon-bg: linear-gradient(180deg, #ffd66e 0 36%, #f5b544 36% 100%);
-  --app-icon-color: #8b5a00;
+  --app-icon-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22), transparent 42%),
+    linear-gradient(180deg, #f7d98a 0 35%, #d7a84a 35% 100%);
+  --app-icon-color: #6c4b16;
 }
 
 .task-editor {
-  --app-icon-bg: linear-gradient(135deg, #40b8ff, #0667d8 58%, #063f9c);
-  --app-icon-color: #ffffff;
+  --app-icon-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 44%),
+    linear-gradient(135deg, #7cb7df, #407fc1 58%, #315c9f);
+  --app-icon-color: #f7fbff;
 }
 
 .task-terminal {
-  --app-icon-bg: linear-gradient(135deg, #263445, #07111b);
-  --app-icon-color: #e3fbef;
+  --app-icon-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), transparent 42%),
+    linear-gradient(135deg, #344252, #131d29 68%, #0b121a);
+  --app-icon-color: #d7ebe6;
 }
 
 .task-transfer {
-  --app-icon-bg: linear-gradient(135deg, #c6f6d5, #22c55e 50%, #078044);
-  --app-icon-color: #064e3b;
+  --app-icon-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 42%),
+    linear-gradient(135deg, #9bd8c4, #4fa98c 58%, #2f7665);
+  --app-icon-color: #123f35;
 }
 
 .task-connection {
-  --app-icon-bg: linear-gradient(135deg, #f1f5f9, #94a3b8);
-  --app-icon-color: #263244;
+  --app-icon-bg:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 42%),
+    linear-gradient(135deg, #eef2f6, #aeb9c6 64%, #8593a4);
+  --app-icon-color: #364253;
 }
 
 .task-app .app-icon {
   background: var(--app-icon-bg);
   color: var(--app-icon-color);
   box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.52) inset,
-    0 8px 14px rgba(15, 23, 42, 0.13);
+    0 1px 0 rgba(255, 255, 255, 0.46) inset,
+    0 -1px 0 rgba(15, 23, 42, 0.08) inset,
+    0 8px 16px rgba(15, 23, 42, 0.1);
 }
 
 .task-app.active {
@@ -532,7 +543,7 @@
   background: transparent;
   color: #94a3b8;
   border-color: transparent;
-  opacity: 0.58;
+  opacity: 0.8;
   box-shadow: none;
 }
 
@@ -551,7 +562,7 @@
   display: block;
   position: absolute;
   left: 50%;
-  bottom: -1px;
+  bottom: 1px;
   width: 4px;
   height: 4px;
   border-radius: 999px;

@@ -90,6 +90,45 @@ document.querySelector("#connectPanel")?.addEventListener("click", (event) => {
   if (event.target === event.currentTarget) closeConnectionSurface();
 });
 stopAutoConnectBtn?.addEventListener("click", cancelAutoConnect);
+
+// Fullscreen toggle event listeners
+const fullscreenButton = document.querySelector("#fullscreenButton");
+if (fullscreenButton) {
+  fullscreenButton.addEventListener("click", () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        showToast(`Fullscreen error: ${err.message}`, "error");
+      });
+    } else {
+      document.exitFullscreen().catch((err) => {
+        showToast(`Exit fullscreen error: ${err.message}`, "error");
+      });
+    }
+  });
+}
+
+document.addEventListener("fullscreenchange", () => {
+  const fullscreenButton = document.querySelector("#fullscreenButton");
+  if (!fullscreenButton) return;
+  
+  const span = fullscreenButton.querySelector("span");
+  const svg = fullscreenButton.querySelector("svg");
+  
+  if (document.fullscreenElement) {
+    fullscreenButton.title = "Exit Fullscreen";
+    if (span) span.textContent = "Exit Full Screen";
+    if (svg) {
+      svg.innerHTML = '<path d="M4 14h6v6m10-6h-6v6M4 10h6V4m10 6h-6V4"/>';
+    }
+  } else {
+    fullscreenButton.title = "Enter Fullscreen";
+    if (span) span.textContent = "Full Screen";
+    if (svg) {
+      svg.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>';
+    }
+  }
+});
+
 toggleKeyTextarea?.addEventListener("click", () => {
   textareaContainer?.classList.toggle("hidden");
   privateKeyTextarea?.focus();
@@ -819,16 +858,26 @@ document.querySelector("#altTabOverlay")?.addEventListener("click", () => {
 
 // 11. Initializer Bootloaders
 setInterval(() => {
-  const barTime = document.querySelector("#barTime");
-  if (barTime) barTime.textContent = formatTime();
+  // const barTime = document.querySelector("#barTime");
+  const taskbarTime = document.querySelector("#taskbarTime");
+  const taskbarDate = document.querySelector("#taskbarDate");
+  const time = formatTime();
+  // if (barTime) barTime.textContent = time;
+  if (taskbarTime) taskbarTime.textContent = time;
+  if (taskbarDate) {
+    taskbarDate.textContent = new Date().toLocaleDateString([], {
+      month: "numeric",
+      day: "numeric",
+      year: "numeric",
+    });
+  }
 }, 1000);
 
-function keepBarOpenAfterLeave(element, openClass) {
+function keepBarOpenAfterLeave(element, openClass, closeDelay = 4500, options = {}) {
   if (!element) return null;
   let closeTimer = null;
   let isHovering = false;
   let isFocused = false;
-  const closeDelay = 4500;
 
   const openBar = () => {
     clearTimeout(closeTimer);
@@ -836,6 +885,10 @@ function keepBarOpenAfterLeave(element, openClass) {
   };
 
   const closeIfInactive = () => {
+    if (options.closeOnIdle) {
+      element.classList.remove(openClass);
+      return;
+    }
     if (!isHovering && !isFocused) element.classList.remove(openClass);
   };
 
@@ -847,10 +900,18 @@ function keepBarOpenAfterLeave(element, openClass) {
   element.addEventListener("mouseenter", () => {
     isHovering = true;
     openBar();
+    if (options.closeOnIdle) scheduleClose();
   });
   element.addEventListener("focusin", () => {
     isFocused = true;
     openBar();
+    if (options.closeOnIdle) scheduleClose();
+  });
+  element.addEventListener("pointermove", () => {
+    if (options.closeOnIdle) {
+      openBar();
+      scheduleClose();
+    }
   });
   element.addEventListener("mouseleave", () => {
     isHovering = false;
@@ -874,13 +935,12 @@ function keepBarOpenAfterLeave(element, openClass) {
 }
 
 const workspaceBarAutoHide = keepBarOpenAfterLeave(workspaceBar, "bar-open");
-const taskbarAutoHide = keepBarOpenAfterLeave(taskbarShell, "taskbar-open");
+const taskbarAutoHide = keepBarOpenAfterLeave(taskbarShell, "taskbar-open", 4000, { closeOnIdle: true });
 document.querySelector(".remote-desktop")?.addEventListener("pointermove", (event) => {
   if (event.clientY <= 18) workspaceBarAutoHide?.revealTransient();
   else workspaceBarAutoHide?.closeSoon();
 
   if (window.innerHeight - event.clientY <= 24) taskbarAutoHide?.revealTransient();
-  else taskbarAutoHide?.closeSoon();
 });
 
 // Drag observer layouts
