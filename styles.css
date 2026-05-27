@@ -3,3 +3,6 @@
 @import "./css/sftp.css";
 @import "./css/editor.css";
 @import "./css/terminal.css";
+/* New 2026 hybrid Win11 + macOS theme. Must come LAST so its variables
+   and overrides win against the older hard-coded styles above. */
+@import "./css/theme.css";

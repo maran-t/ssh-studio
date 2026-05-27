@@ -1,0 +1,1405 @@
+/* =====================================================================
+   SSH OS Bridge — 2026 Hybrid Theme (Win11 Fluent + macOS Sonoma)
+   ---------------------------------------------------------------------
+   This file is loaded LAST so its rules win specificity against the
+   legacy hard-coded colors in desktop.css / connect.css / etc.
+   Two themes via [data-theme="dark|light"] on <html>.
+   ===================================================================== */
+
+:root {
+  /* ---- Type scale ---- */
+  --ssh-font-display: "Inter", "SF Pro Display", "Segoe UI Variable",
+    "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --ssh-font-text: "Inter", "SF Pro Text", "Segoe UI Variable", "Segoe UI",
+    system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --ssh-font-mono: "JetBrains Mono", "SF Mono", "Cascadia Code",
+    ui-monospace, Menlo, Consolas, monospace;
+
+  /* ---- Radius scale ---- */
+  --ssh-radius-xs: 6px;
+  --ssh-radius-sm: 8px;
+  --ssh-radius-md: 12px;
+  --ssh-radius-lg: 16px;
+  --ssh-radius-xl: 20px;
+  --ssh-radius-pill: 999px;
+
+  /* ---- Motion ---- */
+  --ssh-ease: cubic-bezier(0.2, 0.9, 0.3, 1);
+  --ssh-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ssh-dur-fast: 120ms;
+  --ssh-dur-med: 220ms;
+  --ssh-dur-slow: 360ms;
+
+  /* ---- Accent (shared across themes) ---- */
+  --ssh-accent: #4f8cff;
+  --ssh-accent-strong: #2f6dff;
+  --ssh-accent-soft: rgba(79, 140, 255, 0.16);
+  --ssh-accent-ring: rgba(79, 140, 255, 0.45);
+  --ssh-success: #34c759;
+  --ssh-warning: #f5a623;
+  --ssh-danger: #ff453a;
+
+  /* ---- Stroke widths ---- */
+  --ssh-stroke-thin: 0.5px;
+  --ssh-stroke: 1px;
+
+  /* ---- Title-bar control sizing ---- */
+  --ssh-traffic-size: 12px;
+  --ssh-traffic-gap: 8px;
+
+  color-scheme: dark;
+}
+
+/* ============================ DARK THEME ============================ */
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Wallpaper backdrop */
+  --ssh-bg-0: #050811;
+  --ssh-bg-1: #0a0f1c;
+  --ssh-bg-2: #111827;
+  --ssh-bg-elevated: #161e2e;
+
+  /* Glass / mica surfaces */
+  --ssh-surface-1: rgba(20, 26, 42, 0.72);     /* primary window */
+  --ssh-surface-2: rgba(28, 35, 54, 0.78);     /* elevated panels */
+  --ssh-surface-3: rgba(38, 47, 70, 0.82);     /* dialogs */
+  --ssh-surface-hover: rgba(255, 255, 255, 0.06);
+  --ssh-surface-active: rgba(255, 255, 255, 0.10);
+
+  --ssh-acrylic-blur: 30px;
+  --ssh-acrylic-saturate: 180%;
+
+  /* Borders */
+  --ssh-border-1: rgba(255, 255, 255, 0.08);
+  --ssh-border-2: rgba(255, 255, 255, 0.14);
+  --ssh-border-strong: rgba(255, 255, 255, 0.22);
+
+  /* Text */
+  --ssh-text-1: #f3f5fb;
+  --ssh-text-2: #c5cbdc;
+  --ssh-text-3: #8a93ab;
+  --ssh-text-muted: #5d6680;
+  --ssh-text-inverted: #0a0f1c;
+
+  /* Shadows */
+  --ssh-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.35);
+  --ssh-shadow-md: 0 12px 28px rgba(0, 0, 0, 0.45),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  --ssh-shadow-lg: 0 28px 60px rgba(0, 0, 0, 0.55),
+    0 6px 16px rgba(0, 0, 0, 0.4);
+  --ssh-shadow-glow: 0 0 0 1px rgba(79, 140, 255, 0.35),
+    0 12px 40px rgba(79, 140, 255, 0.18);
+
+  /* Highlights */
+  --ssh-highlight: rgba(255, 255, 255, 0.04);
+  --ssh-divider: rgba(255, 255, 255, 0.06);
+
+  /* Wallpaper gradient */
+  --ssh-wallpaper:
+    radial-gradient(1200px 800px at 8% 0%, rgba(79, 140, 255, 0.22), transparent 60%),
+    radial-gradient(1100px 700px at 92% 100%, rgba(217, 70, 239, 0.16), transparent 60%),
+    radial-gradient(900px 700px at 50% 50%, rgba(34, 211, 238, 0.10), transparent 65%),
+    linear-gradient(160deg, #050811 0%, #0a0f1c 50%, #11172b 100%);
+}
+
+/* =========================== LIGHT THEME ============================ */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --ssh-bg-0: #eef1f7;
+  --ssh-bg-1: #f4f6fb;
+  --ssh-bg-2: #ffffff;
+  --ssh-bg-elevated: #ffffff;
+
+  --ssh-surface-1: rgba(255, 255, 255, 0.72);
+  --ssh-surface-2: rgba(255, 255, 255, 0.84);
+  --ssh-surface-3: rgba(255, 255, 255, 0.92);
+  --ssh-surface-hover: rgba(15, 23, 42, 0.05);
+  --ssh-surface-active: rgba(15, 23, 42, 0.09);
+
+  --ssh-acrylic-blur: 26px;
+  --ssh-acrylic-saturate: 160%;
+
+  --ssh-border-1: rgba(15, 23, 42, 0.08);
+  --ssh-border-2: rgba(15, 23, 42, 0.14);
+  --ssh-border-strong: rgba(15, 23, 42, 0.22);
+
+  --ssh-text-1: #0f172a;
+  --ssh-text-2: #364154;
+  --ssh-text-3: #5a6478;
+  --ssh-text-muted: #8893a8;
+  --ssh-text-inverted: #ffffff;
+
+  --ssh-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --ssh-shadow-md: 0 8px 24px rgba(15, 23, 42, 0.10),
+    0 2px 6px rgba(15, 23, 42, 0.06);
+  --ssh-shadow-lg: 0 24px 50px rgba(15, 23, 42, 0.16),
+    0 6px 16px rgba(15, 23, 42, 0.08);
+  --ssh-shadow-glow: 0 0 0 1px rgba(79, 140, 255, 0.32),
+    0 12px 30px rgba(79, 140, 255, 0.16);
+
+  --ssh-highlight: rgba(255, 255, 255, 0.6);
+  --ssh-divider: rgba(15, 23, 42, 0.06);
+
+  --ssh-wallpaper:
+    radial-gradient(1200px 800px at 8% 0%, rgba(79, 140, 255, 0.18), transparent 60%),
+    radial-gradient(1100px 700px at 92% 100%, rgba(217, 70, 239, 0.12), transparent 60%),
+    radial-gradient(900px 700px at 50% 50%, rgba(34, 211, 238, 0.08), transparent 65%),
+    linear-gradient(160deg, #eef1f7 0%, #f7f8fc 50%, #fbfcfe 100%);
+}
+
+/* If the user hasn't picked a theme yet, follow the OS preference. */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+
+    --ssh-bg-0: #eef1f7;
+    --ssh-bg-1: #f4f6fb;
+    --ssh-bg-2: #ffffff;
+    --ssh-bg-elevated: #ffffff;
+    --ssh-surface-1: rgba(255, 255, 255, 0.72);
+    --ssh-surface-2: rgba(255, 255, 255, 0.84);
+    --ssh-surface-3: rgba(255, 255, 255, 0.92);
+    --ssh-surface-hover: rgba(15, 23, 42, 0.05);
+    --ssh-surface-active: rgba(15, 23, 42, 0.09);
+    --ssh-border-1: rgba(15, 23, 42, 0.08);
+    --ssh-border-2: rgba(15, 23, 42, 0.14);
+    --ssh-border-strong: rgba(15, 23, 42, 0.22);
+    --ssh-text-1: #0f172a;
+    --ssh-text-2: #364154;
+    --ssh-text-3: #5a6478;
+    --ssh-text-muted: #8893a8;
+    --ssh-divider: rgba(15, 23, 42, 0.06);
+    --ssh-wallpaper:
+      radial-gradient(1200px 800px at 8% 0%, rgba(79, 140, 255, 0.18), transparent 60%),
+      radial-gradient(1100px 700px at 92% 100%, rgba(217, 70, 239, 0.12), transparent 60%),
+      radial-gradient(900px 700px at 50% 50%, rgba(34, 211, 238, 0.08), transparent 65%),
+      linear-gradient(160deg, #eef1f7 0%, #f7f8fc 50%, #fbfcfe 100%);
+  }
+}
+
+/* ============================ GLOBALS ============================== */
+html,
+body {
+  font-family: var(--ssh-font-text);
+  color: var(--ssh-text-1);
+  background: var(--ssh-bg-0);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--ssh-wallpaper) fixed !important;
+  background-color: var(--ssh-bg-0) !important;
+}
+
+/* Honour reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* Lucide icon sizing primitive. Used like <i data-lucide="folder" class="ico"></i>
+   Lucide REPLACES the <i> with an <svg>, but copies the class attribute, so
+   .ico still matches after the swap. We use !important because Lucide also
+   sets width/height attributes on the SVG that can win against CSS. */
+.ico,
+[data-lucide],
+svg.ssh-lucide,
+svg.lucide {
+  width: 16px !important;
+  height: 16px !important;
+  stroke-width: 1.75;
+  flex-shrink: 0;
+  vertical-align: middle;
+  color: currentColor;
+}
+.ico-sm,
+svg.ssh-lucide.ico-sm { width: 14px !important; height: 14px !important; }
+.ico-md,
+svg.ssh-lucide.ico-md { width: 18px !important; height: 18px !important; }
+.ico-lg,
+svg.ssh-lucide.ico-lg { width: 22px !important; height: 22px !important; }
+.ico-xl,
+svg.ssh-lucide.ico-xl { width: 28px !important; height: 28px !important; }
+
+/* ===================== TOP WORKSPACE BAR ============================ */
+.remote-desktop > .workspace-bar {
+  background: var(--ssh-surface-1) !important;
+  -webkit-backdrop-filter: blur(var(--ssh-acrylic-blur)) saturate(var(--ssh-acrylic-saturate));
+  backdrop-filter: blur(var(--ssh-acrylic-blur)) saturate(var(--ssh-acrylic-saturate));
+  border-bottom: 1px solid var(--ssh-border-1) !important;
+  color: var(--ssh-text-2) !important;
+}
+
+.connect-pill {
+  background: var(--ssh-surface-2) !important;
+  color: var(--ssh-text-1) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-pill) !important;
+  transition: background var(--ssh-dur-fast) var(--ssh-ease),
+    border-color var(--ssh-dur-fast) var(--ssh-ease),
+    transform var(--ssh-dur-fast) var(--ssh-ease);
+}
+.connect-pill:hover {
+  background: var(--ssh-surface-3) !important;
+  border-color: var(--ssh-border-2) !important;
+  transform: translateY(-1px);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ssh-text-muted);
+  box-shadow: 0 0 0 2px color-mix(in srgb, currentColor 18%, transparent);
+}
+.status-dot.connected,
+.status-dot.online,
+.status-dot.ok {
+  background: var(--ssh-success) !important;
+  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.18);
+}
+.status-dot.disconnected,
+.status-dot.offline {
+  background: var(--ssh-text-muted) !important;
+}
+.status-dot.error,
+.status-dot.danger {
+  background: var(--ssh-danger) !important;
+  box-shadow: 0 0 0 3px rgba(255, 69, 58, 0.18);
+}
+
+.strip-action {
+  background: transparent !important;
+  color: var(--ssh-text-2) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-pill) !important;
+  padding: 4px 10px !important;
+  transition: all var(--ssh-dur-fast) var(--ssh-ease);
+}
+.strip-action:hover {
+  background: var(--ssh-surface-hover) !important;
+  color: var(--ssh-text-1) !important;
+  border-color: var(--ssh-border-2) !important;
+}
+
+/* ============================= TASKBAR =============================== */
+.taskbar-shell {
+  background: var(--ssh-surface-1) !important;
+  -webkit-backdrop-filter: blur(var(--ssh-acrylic-blur)) saturate(var(--ssh-acrylic-saturate));
+  backdrop-filter: blur(var(--ssh-acrylic-blur)) saturate(var(--ssh-acrylic-saturate));
+  border-top: 1px solid var(--ssh-border-1) !important;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.25) !important;
+}
+
+.taskbar-shell .start-button,
+.taskbar-shell .taskbar-search,
+.taskbar-shell .task-app,
+.taskbar-shell .tray-icon,
+.taskbar-shell .taskbar-clock,
+.taskbar-shell .taskbar-weather {
+  background: transparent !important;
+  color: var(--ssh-text-2) !important;
+  border-radius: var(--ssh-radius-sm) !important;
+  border: 1px solid transparent !important;
+  transition: background var(--ssh-dur-fast) var(--ssh-ease),
+    color var(--ssh-dur-fast) var(--ssh-ease),
+    transform var(--ssh-dur-fast) var(--ssh-ease);
+}
+
+.taskbar-shell .start-button:hover,
+.taskbar-shell .taskbar-search:hover,
+.taskbar-shell .task-app:hover,
+.taskbar-shell .tray-icon:hover,
+.taskbar-shell .taskbar-clock:hover,
+.taskbar-shell .taskbar-weather:hover {
+  background: var(--ssh-surface-hover) !important;
+  color: var(--ssh-text-1) !important;
+  transform: translateY(-1px);
+}
+
+.taskbar-shell .start-button svg,
+.taskbar-shell .taskbar-search svg,
+.taskbar-shell .task-app svg,
+.taskbar-shell .tray-icon svg {
+  fill: currentColor;
+}
+
+/* Active app indicator (Win11 dot) */
+.taskbar-shell .task-app.active::after,
+.taskbar-shell .task-app:not(.minimized)::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 2px;
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--ssh-accent);
+  box-shadow: 0 0 8px var(--ssh-accent-ring);
+  transform: translateX(-50%);
+}
+.taskbar-shell .task-app { position: relative; }
+
+/* ============================== START MENU ========================== */
+.start-menu-panel {
+  background: var(--ssh-surface-2) !important;
+  -webkit-backdrop-filter: blur(var(--ssh-acrylic-blur)) saturate(var(--ssh-acrylic-saturate));
+  backdrop-filter: blur(var(--ssh-acrylic-blur)) saturate(var(--ssh-acrylic-saturate));
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-xl) !important;
+  box-shadow: var(--ssh-shadow-lg) !important;
+  color: var(--ssh-text-1) !important;
+}
+
+.start-search {
+  background: var(--ssh-surface-1) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-pill) !important;
+}
+.start-search input {
+  background: transparent !important;
+  color: var(--ssh-text-1) !important;
+}
+.start-search input::placeholder {
+  color: var(--ssh-text-3);
+}
+
+.launcher-app {
+  background: var(--ssh-surface-1) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-md) !important;
+  color: var(--ssh-text-1) !important;
+  transition: background var(--ssh-dur-fast) var(--ssh-ease),
+    transform var(--ssh-dur-fast) var(--ssh-ease),
+    border-color var(--ssh-dur-fast) var(--ssh-ease);
+}
+.launcher-app:hover {
+  background: var(--ssh-surface-3) !important;
+  border-color: var(--ssh-accent-ring) !important;
+  transform: translateY(-2px);
+}
+.launcher-app strong { color: var(--ssh-text-1) !important; }
+.launcher-app small { color: var(--ssh-text-3) !important; }
+
+.launcher-icon {
+  display: grid !important;
+  place-items: center !important;
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: var(--ssh-radius-md) !important;
+  font-size: 0 !important; /* hide legacy text */
+  color: var(--ssh-text-inverted) !important;
+  box-shadow: var(--ssh-shadow-sm);
+}
+.launcher-icon::after {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--ssh-font-text);
+}
+.launcher-icon.launcher-files {
+  background: linear-gradient(135deg, #4f8cff, #2f6dff) !important;
+}
+.launcher-icon.launcher-files::after { content: "📁"; font-size: 22px; }
+.launcher-icon.launcher-terminal {
+  background: linear-gradient(135deg, #1f2937, #0b1220) !important;
+  color: var(--ssh-accent) !important;
+}
+.launcher-icon.launcher-terminal::after { content: ">_"; font-family: var(--ssh-font-mono); }
+.launcher-icon.launcher-editor {
+  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+}
+.launcher-icon.launcher-editor::after { content: "✎"; font-size: 22px; }
+.launcher-icon.launcher-transfer {
+  background: linear-gradient(135deg, #a855f7, #7e22ce) !important;
+}
+.launcher-icon.launcher-transfer::after { content: "⇅"; font-size: 22px; }
+
+/* Use lucide icons when present inside a launcher icon */
+.launcher-icon [data-lucide],
+.launcher-icon svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 2;
+  color: inherit;
+}
+.launcher-icon:has([data-lucide])::after,
+.launcher-icon:has(svg)::after { content: none; }
+
+.start-account-pane {
+  background: var(--ssh-surface-1) !important;
+  border-top: 1px solid var(--ssh-border-1) !important;
+}
+.start-avatar {
+  background: linear-gradient(135deg, var(--ssh-accent), var(--ssh-accent-strong)) !important;
+  color: white !important;
+  border-radius: 50% !important;
+  box-shadow: var(--ssh-shadow-sm);
+}
+.start-account-button {
+  background: var(--ssh-surface-2) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-pill) !important;
+  color: var(--ssh-text-1) !important;
+  transition: all var(--ssh-dur-fast) var(--ssh-ease);
+}
+.start-account-button:hover {
+  background: var(--ssh-surface-3) !important;
+  border-color: var(--ssh-border-2) !important;
+}
+
+/* ============================ WINDOWS =============================== */
+.window {
+  background: var(--ssh-surface-1) !important;
+  -webkit-backdrop-filter: blur(var(--ssh-acrylic-blur)) saturate(var(--ssh-acrylic-saturate));
+  backdrop-filter: blur(var(--ssh-acrylic-blur)) saturate(var(--ssh-acrylic-saturate));
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-lg) !important;
+  box-shadow: var(--ssh-shadow-lg) !important;
+  color: var(--ssh-text-1) !important;
+  overflow: hidden;
+}
+
+.window-titlebar {
+  background: linear-gradient(180deg, var(--ssh-surface-2), var(--ssh-surface-1)) !important;
+  border-bottom: 1px solid var(--ssh-border-1) !important;
+  color: var(--ssh-text-1) !important;
+  min-height: 38px;
+}
+.window-titlebar h1,
+.window-titlebar h2 {
+  color: var(--ssh-text-1) !important;
+  font-family: var(--ssh-font-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+}
+
+/* macOS traffic-light controls */
+.window-titlebar .traffic {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--ssh-traffic-gap) !important;
+  padding-left: 6px;
+}
+.traffic-control {
+  width: var(--ssh-traffic-size) !important;
+  height: var(--ssh-traffic-size) !important;
+  border-radius: 50% !important;
+  border: 0 !important;
+  padding: 0 !important;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.25),
+    inset 0 -0.5px 0.5px rgba(255, 255, 255, 0.15) !important;
+  cursor: pointer;
+  position: relative;
+  transition: filter var(--ssh-dur-fast) var(--ssh-ease),
+    transform var(--ssh-dur-fast) var(--ssh-ease);
+}
+.traffic-control.close-control { background: #ff5f57 !important; }
+.traffic-control.minimize-control { background: #febc2e !important; }
+.traffic-control.maximize-control { background: #28c840 !important; }
+.traffic-control:hover { filter: brightness(1.1); }
+.traffic-control:active { transform: scale(0.92); }
+
+/* show macOS-style icons on hover */
+.window-titlebar .traffic:hover .traffic-control::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px 8px;
+  opacity: 0.55;
+}
+.window-titlebar .traffic:hover .close-control::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path d='M1.3 1.3l5.4 5.4M6.7 1.3L1.3 6.7' stroke='%23000' stroke-width='1.4' stroke-linecap='round'/></svg>");
+}
+.window-titlebar .traffic:hover .minimize-control::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path d='M1.5 4h5' stroke='%23000' stroke-width='1.4' stroke-linecap='round'/></svg>");
+}
+.window-titlebar .traffic:hover .maximize-control::after {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'><path d='M1.5 4h5M4 1.5v5' stroke='%23000' stroke-width='1.4' stroke-linecap='round'/></svg>");
+}
+
+.window-footer,
+.editor-status-bar {
+  background: var(--ssh-surface-2) !important;
+  border-top: 1px solid var(--ssh-border-1) !important;
+  color: var(--ssh-text-3) !important;
+  font-size: 11.5px;
+}
+
+/* ====================== FILE MANAGER ============================= */
+.file-toolbar {
+  background: var(--ssh-surface-2) !important;
+  border-bottom: 1px solid var(--ssh-border-1) !important;
+}
+.file-explorer-content-container {
+  background: var(--ssh-bg-1) !important;
+}
+.file-table .table-head {
+  background: var(--ssh-surface-2) !important;
+  border-bottom: 1px solid var(--ssh-border-1) !important;
+  color: var(--ssh-text-3) !important;
+  text-transform: uppercase;
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.file-row {
+  border-bottom: 1px solid var(--ssh-divider) !important;
+  transition: background var(--ssh-dur-fast) var(--ssh-ease);
+}
+.file-row:hover {
+  background: var(--ssh-surface-hover) !important;
+}
+.file-row.selected,
+.file-row[aria-selected="true"] {
+  background: var(--ssh-accent-soft) !important;
+  color: var(--ssh-text-1) !important;
+}
+.file-row .file-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.file-row .file-name [data-lucide] {
+  color: var(--ssh-accent);
+}
+
+.file-nav-group button,
+.file-actions button,
+#togglePreviewPaneBtn {
+  background: transparent !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-sm) !important;
+  color: var(--ssh-text-2) !important;
+  padding: 5px 10px !important;
+  font-family: var(--ssh-font-text);
+  font-weight: 500;
+  font-size: 12px;
+  transition: all var(--ssh-dur-fast) var(--ssh-ease);
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+.file-nav-group button:hover:not(:disabled),
+.file-actions button:hover:not(:disabled),
+#togglePreviewPaneBtn:hover {
+  background: var(--ssh-surface-hover) !important;
+  border-color: var(--ssh-border-2) !important;
+  color: var(--ssh-text-1) !important;
+}
+.file-nav-group button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.file-menu summary {
+  background: transparent !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-sm) !important;
+  color: var(--ssh-text-2) !important;
+  cursor: pointer;
+  padding: 5px 10px !important;
+}
+.file-menu summary:hover {
+  background: var(--ssh-surface-hover) !important;
+  color: var(--ssh-text-1) !important;
+}
+.file-menu-panel {
+  background: var(--ssh-surface-3) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-md) !important;
+  box-shadow: var(--ssh-shadow-md) !important;
+}
+.file-menu-panel button {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--ssh-text-1) !important;
+}
+.file-menu-panel button:hover {
+  background: var(--ssh-surface-hover) !important;
+}
+
+.file-address-bar {
+  background: var(--ssh-surface-1) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-pill) !important;
+  color: var(--ssh-text-2);
+}
+.breadcrumbs {
+  color: var(--ssh-text-2) !important;
+}
+.file-search-container input,
+#fileSearch {
+  background: var(--ssh-surface-1) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-pill) !important;
+  color: var(--ssh-text-1) !important;
+  padding: 6px 12px !important;
+}
+.file-search-container input::placeholder,
+#fileSearch::placeholder {
+  color: var(--ssh-text-3);
+}
+
+#filePreviewPane {
+  background: var(--ssh-surface-2) !important;
+  border-left: 1px solid var(--ssh-border-1) !important;
+  color: var(--ssh-text-1) !important;
+}
+
+/* ====================== EDITOR (VS Code-ish) =====================
+   The Monaco editor uses its own "m2-dark" theme by default. We pin
+   the surrounding chrome (titlebar, activity bar, sidebar, tabs, etc.)
+   to a fixed dark palette so it looks consistent with Monaco's body
+   even when the app shell is running in light mode. This mirrors VS
+   Code's behaviour: the workbench stays dark when the user picks a
+   dark color theme, regardless of the host OS theme. */
+.editor-window {
+  color-scheme: dark;
+  --ssh-surface-1: rgba(20, 26, 42, 0.92);
+  --ssh-surface-2: rgba(28, 35, 54, 0.94);
+  --ssh-surface-3: rgba(38, 47, 70, 0.96);
+  --ssh-surface-hover: rgba(255, 255, 255, 0.06);
+  --ssh-surface-active: rgba(255, 255, 255, 0.10);
+  --ssh-bg-0: #0a0f1c;
+  --ssh-bg-1: #0d1117;
+  --ssh-bg-2: #111827;
+  --ssh-bg-elevated: #161e2e;
+  --ssh-border-1: rgba(255, 255, 255, 0.08);
+  --ssh-border-2: rgba(255, 255, 255, 0.14);
+  --ssh-text-1: #f3f5fb;
+  --ssh-text-2: #c5cbdc;
+  --ssh-text-3: #8a93ab;
+  --ssh-text-muted: #5d6680;
+  --ssh-divider: rgba(255, 255, 255, 0.06);
+  background: var(--ssh-bg-1) !important;
+  color: var(--ssh-text-1) !important;
+}
+
+/* Reinforce: light theme should NOT bleed into the editor surfaces. */
+[data-theme="light"] .editor-window,
+[data-theme="light"] .editor-window .window-titlebar,
+[data-theme="light"] .editor-window .editor-titlebar,
+[data-theme="light"] .editor-window .editor-activity-bar,
+[data-theme="light"] .editor-window .editor-side,
+[data-theme="light"] .editor-window .editor-tabs,
+[data-theme="light"] .editor-window .editor-meta,
+[data-theme="light"] .editor-window .editor-status-bar {
+  color-scheme: dark;
+}
+[data-theme="light"] .editor-window .editor-main,
+[data-theme="light"] .editor-window .editor-welcome,
+[data-theme="light"] .editor-window .editor-preferences,
+[data-theme="light"] .editor-window .editor-keybindings {
+  background: #0d1117 !important;
+  color: #f3f5fb !important;
+}
+[data-theme="light"] .editor-window .editor-titlebar {
+  background: linear-gradient(180deg, rgba(28, 35, 54, 0.94), rgba(20, 26, 42, 0.92)) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="light"] .editor-window .window-titlebar h1,
+[data-theme="light"] .editor-window .window-titlebar h2,
+[data-theme="light"] .editor-window .editor-menu-bar button {
+  color: #f3f5fb !important;
+}
+[data-theme="light"] .editor-window .editor-menu-bar button:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="light"] .editor-window .editor-command-center {
+  background: rgba(20, 26, 42, 0.92) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #c5cbdc !important;
+}
+[data-theme="light"] .editor-window .editor-side {
+  background: rgba(20, 26, 42, 0.92) !important;
+  border-right-color: rgba(255, 255, 255, 0.08) !important;
+  color: #c5cbdc !important;
+}
+[data-theme="light"] .editor-window .editor-activity-bar {
+  background: rgba(28, 35, 54, 0.94) !important;
+  border-right-color: rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="light"] .editor-window .editor-tabs {
+  background: rgba(28, 35, 54, 0.94) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="light"] .editor-window .editor-tab {
+  color: #8a93ab !important;
+}
+[data-theme="light"] .editor-window .editor-tab.active {
+  background: #0d1117 !important;
+  color: #f3f5fb !important;
+}
+[data-theme="light"] .editor-window .editor-meta,
+[data-theme="light"] .editor-window .editor-status-bar {
+  background: rgba(28, 35, 54, 0.94) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  color: #8a93ab !important;
+}
+[data-theme="light"] .editor-window input,
+[data-theme="light"] .editor-window select,
+[data-theme="light"] .editor-window textarea {
+  background: #161e2e !important;
+  color: #f3f5fb !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="light"] .editor-window .editor-side-actions button,
+[data-theme="light"] .editor-window .editor-settings-toc button,
+[data-theme="light"] .editor-window .editor-activity-item {
+  color: #c5cbdc !important;
+}
+[data-theme="light"] .editor-window .editor-side-actions button:hover,
+[data-theme="light"] .editor-window .editor-settings-toc button:hover,
+[data-theme="light"] .editor-window .editor-settings-toc button.active,
+[data-theme="light"] .editor-window .editor-activity-item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #f3f5fb !important;
+}
+
+.editor-titlebar {
+  background: linear-gradient(180deg, var(--ssh-surface-2), var(--ssh-surface-1)) !important;
+  border-bottom: 1px solid var(--ssh-border-1) !important;
+}
+.editor-menu-bar button {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--ssh-text-2) !important;
+  padding: 4px 8px !important;
+  border-radius: var(--ssh-radius-xs) !important;
+  font-family: var(--ssh-font-text);
+  font-size: 12px;
+}
+.editor-menu-bar button:hover {
+  background: var(--ssh-surface-hover) !important;
+  color: var(--ssh-text-1) !important;
+}
+.editor-command-center {
+  background: var(--ssh-surface-1) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-sm) !important;
+  color: var(--ssh-text-2) !important;
+  height: 26px;
+  max-width: 540px;
+  font-size: 12px;
+  transition: all var(--ssh-dur-fast) var(--ssh-ease);
+}
+.editor-command-center:hover {
+  border-color: var(--ssh-border-2) !important;
+  background: var(--ssh-surface-2) !important;
+  color: var(--ssh-text-1) !important;
+}
+
+.editor-activity-bar {
+  background: var(--ssh-surface-2) !important;
+  border-right: 1px solid var(--ssh-border-1) !important;
+}
+.editor-activity-item {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--ssh-text-3) !important;
+  width: 40px;
+  height: 40px;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: var(--ssh-radius-sm) !important;
+  font-size: 18px;
+  transition: all var(--ssh-dur-fast) var(--ssh-ease);
+  position: relative;
+}
+.editor-activity-item:hover { color: var(--ssh-text-1) !important; background: var(--ssh-surface-hover) !important; }
+.editor-activity-item.active { color: var(--ssh-text-1) !important; }
+.editor-activity-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 2px;
+  background: var(--ssh-accent);
+  border-radius: 2px;
+}
+
+.editor-side {
+  background: var(--ssh-surface-1) !important;
+  border-right: 1px solid var(--ssh-border-1) !important;
+  color: var(--ssh-text-2) !important;
+}
+.editor-side-title {
+  color: var(--ssh-text-3) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.editor-side-input,
+#editorExplorerSearch,
+#editorWorkbenchSearch,
+#editorWorkbenchReplace,
+#editorSettingsSearch,
+#editorKeybindingsSearch {
+  background: var(--ssh-bg-elevated) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-sm) !important;
+  color: var(--ssh-text-1) !important;
+}
+.editor-side-actions button,
+.editor-settings-toc button {
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  border-radius: var(--ssh-radius-sm) !important;
+  color: var(--ssh-text-2) !important;
+  transition: all var(--ssh-dur-fast) var(--ssh-ease);
+}
+.editor-side-actions button:hover,
+.editor-settings-toc button:hover,
+.editor-settings-toc button.active {
+  background: var(--ssh-surface-hover) !important;
+  color: var(--ssh-text-1) !important;
+}
+
+.editor-main { background: var(--ssh-bg-1) !important; }
+.editor-tabs { background: var(--ssh-surface-2) !important; border-bottom: 1px solid var(--ssh-border-1) !important; }
+.editor-tab {
+  background: transparent !important;
+  border-right: 1px solid var(--ssh-border-1) !important;
+  color: var(--ssh-text-3) !important;
+}
+.editor-tab.active {
+  background: var(--ssh-bg-1) !important;
+  color: var(--ssh-text-1) !important;
+}
+.editor-meta { background: var(--ssh-surface-1) !important; border-bottom: 1px solid var(--ssh-border-1) !important; color: var(--ssh-text-3) !important; }
+
+.editor-welcome,
+.editor-preferences,
+.editor-keybindings {
+  background: var(--ssh-bg-1) !important;
+  color: var(--ssh-text-1) !important;
+}
+
+/* ====================== TERMINAL =============================== */
+.terminal-window .window-titlebar.dark-title {
+  background: linear-gradient(180deg, #0c111c, #070a13) !important;
+  color: var(--ssh-text-1) !important;
+}
+.terminal-body { background: #060a14 !important; }
+.terminal-mount { background: transparent !important; }
+.terminal-status { color: var(--ssh-text-3) !important; }
+
+/* ====================== TRANSFERS =============================== */
+.transfer-container { background: transparent !important; }
+.transfer-upload-section { background: var(--ssh-surface-1) !important; border: 1px solid var(--ssh-border-1) !important; border-radius: var(--ssh-radius-md) !important; padding: 14px !important; }
+.transfer-path-actions button,
+#clearTransferHistory,
+.btn-clear-queue {
+  background: var(--ssh-surface-2) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-pill) !important;
+  color: var(--ssh-text-1) !important;
+  padding: 5px 12px !important;
+  font-size: 12px;
+}
+.transfer-path-actions button:hover,
+#clearTransferHistory:hover { background: var(--ssh-surface-3) !important; }
+.drop-zone {
+  background: var(--ssh-surface-1) !important;
+  border: 2px dashed var(--ssh-border-2) !important;
+  border-radius: var(--ssh-radius-lg) !important;
+  color: var(--ssh-text-2) !important;
+  transition: all var(--ssh-dur-fast) var(--ssh-ease);
+}
+.drop-zone:hover,
+.drop-zone.dragging {
+  background: var(--ssh-accent-soft) !important;
+  border-color: var(--ssh-accent) !important;
+  color: var(--ssh-text-1) !important;
+}
+.path-badge {
+  background: var(--ssh-bg-elevated) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-xs) !important;
+  padding: 2px 6px !important;
+  font-family: var(--ssh-font-mono);
+  font-size: 11px;
+  color: var(--ssh-text-1) !important;
+}
+
+/* ====================== CONNECT DIALOG =========================== */
+.connect-panel {
+  background: rgba(8, 12, 22, 0.55) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+}
+[data-theme="light"] .connect-panel {
+  background: rgba(238, 241, 247, 0.55) !important;
+}
+.connect-card {
+  background: var(--ssh-surface-3) !important;
+  -webkit-backdrop-filter: blur(var(--ssh-acrylic-blur)) saturate(var(--ssh-acrylic-saturate));
+  backdrop-filter: blur(var(--ssh-acrylic-blur)) saturate(var(--ssh-acrylic-saturate));
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-xl) !important;
+  box-shadow: var(--ssh-shadow-lg) !important;
+  color: var(--ssh-text-1) !important;
+}
+.connect-card h2,
+.connect-card h3,
+.connect-card strong { color: var(--ssh-text-1) !important; }
+.login-subtitle { color: var(--ssh-text-3) !important; }
+.login-field input,
+.login-field select,
+.login-field textarea,
+#sshAuthType,
+#privateKey,
+#passphrase,
+#sshPassword {
+  background: var(--ssh-bg-elevated) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  color: var(--ssh-text-1) !important;
+  border-radius: var(--ssh-radius-md) !important;
+  transition: border-color var(--ssh-dur-fast) var(--ssh-ease),
+    box-shadow var(--ssh-dur-fast) var(--ssh-ease);
+}
+.login-field input:focus,
+.login-field select:focus,
+#sshAuthType:focus,
+#privateKey:focus,
+#passphrase:focus,
+#sshPassword:focus {
+  outline: none !important;
+  border-color: var(--ssh-accent) !important;
+  box-shadow: 0 0 0 3px var(--ssh-accent-soft);
+}
+.pem-pill-button {
+  background: var(--ssh-bg-elevated) !important;
+  border: 1px dashed var(--ssh-border-2) !important;
+  color: var(--ssh-text-2) !important;
+  border-radius: var(--ssh-radius-md) !important;
+  transition: all var(--ssh-dur-fast) var(--ssh-ease);
+}
+.pem-pill-button:hover {
+  background: var(--ssh-surface-2) !important;
+  border-color: var(--ssh-accent) !important;
+  color: var(--ssh-text-1) !important;
+}
+.key-text-toggle-btn {
+  background: var(--ssh-surface-2) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-sm) !important;
+  color: var(--ssh-text-1) !important;
+}
+.advanced-settings summary { color: var(--ssh-text-3) !important; }
+
+#connectButton,
+.connect-actions button[type="submit"] {
+  background: linear-gradient(135deg, var(--ssh-accent), var(--ssh-accent-strong)) !important;
+  color: white !important;
+  border: 0 !important;
+  border-radius: var(--ssh-radius-pill) !important;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 10px 20px !important;
+  box-shadow: var(--ssh-shadow-sm), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  transition: transform var(--ssh-dur-fast) var(--ssh-ease),
+    box-shadow var(--ssh-dur-fast) var(--ssh-ease);
+}
+#connectButton:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--ssh-shadow-md), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
+}
+#connectMessage { color: var(--ssh-text-3) !important; }
+
+.dialog-close {
+  background: var(--ssh-surface-2) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: 50% !important;
+  color: var(--ssh-text-2) !important;
+  width: 28px !important;
+  height: 28px !important;
+}
+.dialog-close:hover {
+  background: var(--ssh-danger) !important;
+  color: white !important;
+  border-color: transparent !important;
+}
+
+/* Hide legacy SSH lock emoji in login avatar - we'll show a Lucide one */
+.login-avatar {
+  background: linear-gradient(135deg, var(--ssh-accent), var(--ssh-accent-strong)) !important;
+  border: 2px solid var(--ssh-border-1) !important;
+  box-shadow: var(--ssh-shadow-md);
+}
+
+/* ====================== SYSTEM TRAY POPUPS ====================== */
+.weather-popup,
+.calendar-popup,
+.tray-popup {
+  background: var(--ssh-surface-3) !important;
+  -webkit-backdrop-filter: blur(var(--ssh-acrylic-blur)) saturate(var(--ssh-acrylic-saturate));
+  backdrop-filter: blur(var(--ssh-acrylic-blur)) saturate(var(--ssh-acrylic-saturate));
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-lg) !important;
+  box-shadow: var(--ssh-shadow-lg) !important;
+  color: var(--ssh-text-1) !important;
+  font-family: var(--ssh-font-text) !important;
+}
+.weather-popup strong,
+.calendar-popup strong,
+.tray-popup strong { color: var(--ssh-text-1) !important; }
+
+#calendarDays > span,
+#calendarDays > button {
+  border-radius: var(--ssh-radius-sm) !important;
+  transition: background var(--ssh-dur-fast) var(--ssh-ease);
+}
+#calendarDays > span:hover,
+#calendarDays > button:hover {
+  background: var(--ssh-surface-hover) !important;
+}
+#calendarDays .today {
+  background: var(--ssh-accent) !important;
+  color: white !important;
+  font-weight: 700;
+}
+
+/* ============================= MODAL =============================== */
+.modal-overlay {
+  background: rgba(8, 12, 22, 0.55) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+}
+[data-theme="light"] .modal-overlay {
+  background: rgba(238, 241, 247, 0.55) !important;
+}
+.modal-card {
+  background: var(--ssh-surface-3) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-lg) !important;
+  box-shadow: var(--ssh-shadow-lg) !important;
+  color: var(--ssh-text-1) !important;
+}
+.modal-title { color: var(--ssh-text-1) !important; }
+.modal-message { color: var(--ssh-text-2) !important; }
+.modal-input {
+  background: var(--ssh-bg-elevated) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  color: var(--ssh-text-1) !important;
+  border-radius: var(--ssh-radius-sm) !important;
+}
+.modal-btn {
+  border-radius: var(--ssh-radius-pill) !important;
+  font-family: var(--ssh-font-text) !important;
+  font-weight: 600 !important;
+  padding: 8px 18px !important;
+  transition: all var(--ssh-dur-fast) var(--ssh-ease);
+}
+.modal-btn.secondary {
+  background: var(--ssh-surface-2) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  color: var(--ssh-text-1) !important;
+}
+.modal-btn.primary {
+  background: linear-gradient(135deg, var(--ssh-accent), var(--ssh-accent-strong)) !important;
+  border: 0 !important;
+  color: white !important;
+}
+.modal-btn:hover { transform: translateY(-1px); }
+.modal-close-x {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--ssh-text-3) !important;
+}
+.modal-close-x:hover { color: var(--ssh-text-1) !important; }
+
+/* ============================= TOASTS ============================== */
+.toast-container { position: fixed; top: 56px; right: 16px; z-index: 999999; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  background: var(--ssh-surface-3) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-md) !important;
+  box-shadow: var(--ssh-shadow-md) !important;
+  color: var(--ssh-text-1) !important;
+  padding: 10px 14px !important;
+}
+
+/* ============================= CONTEXT MENUS ======================= */
+.taskbar-context-menu {
+  background: var(--ssh-surface-3) !important;
+  -webkit-backdrop-filter: blur(var(--ssh-acrylic-blur)) saturate(var(--ssh-acrylic-saturate));
+  backdrop-filter: blur(var(--ssh-acrylic-blur)) saturate(var(--ssh-acrylic-saturate));
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-md) !important;
+  box-shadow: var(--ssh-shadow-lg) !important;
+  padding: 6px !important;
+  color: var(--ssh-text-1) !important;
+}
+.context-item {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--ssh-text-1) !important;
+  padding: 6px 10px !important;
+  border-radius: var(--ssh-radius-xs) !important;
+  font-family: var(--ssh-font-text) !important;
+  font-size: 12.5px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background var(--ssh-dur-fast) var(--ssh-ease);
+}
+.context-item:hover { background: var(--ssh-surface-hover) !important; }
+.context-item.danger { color: var(--ssh-danger) !important; }
+.context-item.danger:hover { background: rgba(255, 69, 58, 0.12) !important; }
+.context-divider {
+  border: 0;
+  border-top: 1px solid var(--ssh-border-1);
+  margin: 4px 0;
+}
+
+/* ============================ ALT-TAB =============================== */
+.alt-tab-overlay {
+  background: rgba(8, 12, 22, 0.45) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  backdrop-filter: blur(24px) saturate(160%);
+}
+.alt-tab-switcher {
+  background: var(--ssh-surface-3) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-lg) !important;
+  box-shadow: var(--ssh-shadow-lg) !important;
+  color: var(--ssh-text-1) !important;
+}
+
+/* ========================== WALLPAPER MODAL ========================= */
+.wallpaper-option-btn {
+  transition: transform var(--ssh-dur-fast) var(--ssh-ease),
+    border-color var(--ssh-dur-fast) var(--ssh-ease),
+    box-shadow var(--ssh-dur-fast) var(--ssh-ease);
+}
+.wallpaper-option-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--ssh-accent) !important;
+  box-shadow: var(--ssh-shadow-md);
+}
+
+/* ============================ SCROLLBARS ============================ */
+* { scrollbar-width: thin; scrollbar-color: var(--ssh-border-2) transparent; }
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: var(--ssh-border-2);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--ssh-border-strong); background-clip: padding-box; }
+
+/* ============================ THEME TOGGLE PILL =================== */
+.theme-toggle-pill {
+  position: fixed;
+  top: 10px;
+  right: 12px;
+  z-index: 100000;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--ssh-border-1);
+  background: var(--ssh-surface-2);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  backdrop-filter: blur(20px) saturate(160%);
+  border-radius: var(--ssh-radius-pill);
+  color: var(--ssh-text-1);
+  cursor: pointer;
+  font-family: var(--ssh-font-text);
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: var(--ssh-shadow-sm);
+  transition: transform var(--ssh-dur-fast) var(--ssh-ease),
+    border-color var(--ssh-dur-fast) var(--ssh-ease),
+    background var(--ssh-dur-fast) var(--ssh-ease);
+}
+.theme-toggle-pill:hover {
+  border-color: var(--ssh-border-2);
+  background: var(--ssh-surface-3);
+  transform: translateY(-1px);
+}
+.theme-toggle-pill [data-lucide] {
+  width: 14px;
+  height: 14px;
+}
+
+/* ============================ ACCENT FOCUS ========================= */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--ssh-accent-ring);
+  outline-offset: 2px;
+}
+
+/* When Lucide replaces text-content icons, remove the old text */
+.editor-activity-item[data-lucide-replaced] {
+  font-size: 0 !important;
+}
+.editor-activity-item[data-lucide-replaced] svg,
+.editor-activity-item[data-lucide-replaced] [data-lucide] {
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+}
+
+/* Light-theme tuning: terminal stays dark for legibility */
+[data-theme="light"] .terminal-body { background: #0b1220 !important; }
+[data-theme="light"] .terminal-window .window-titlebar.dark-title {
+  background: linear-gradient(180deg, #1a2336, #11192a) !important;
+  color: #f3f5fb !important;
+}
+
+/* ====================== FILE ROW ICON COLORS ====================== */
+.file-icon {
+  display: inline-grid !important;
+  place-items: center !important;
+  width: 26px !important;
+  height: 26px !important;
+  border-radius: var(--ssh-radius-xs);
+  background: var(--ssh-surface-hover);
+  flex-shrink: 0;
+}
+.file-icon > i[data-lucide],
+.file-icon > svg,
+.file-icon svg.ssh-lucide,
+.file-icon svg.lucide {
+  width: 16px !important;
+  height: 16px !important;
+  stroke-width: 1.75;
+  color: currentColor;
+}
+.file-icon.folder { color: #4f8cff; background: rgba(79, 140, 255, 0.16); }
+.file-icon.code { color: #22d3ee; background: rgba(34, 211, 238, 0.14); }
+.file-icon.image { color: #a855f7; background: rgba(168, 85, 247, 0.14); }
+.file-icon.archive { color: #f5a623; background: rgba(245, 166, 35, 0.14); }
+.file-icon.file { color: var(--ssh-text-3); background: var(--ssh-surface-hover); }
+.file-row.selected .file-icon,
+.file-row[aria-selected="true"] .file-icon {
+  background: rgba(79, 140, 255, 0.22);
+}
+[data-theme="light"] .file-row.selected .file-icon,
+[data-theme="light"] .file-row[aria-selected="true"] .file-icon {
+  background: rgba(79, 140, 255, 0.18);
+}
+
+/* ====================== EDITOR SIDE MINI BUTTONS =================== */
+.editor-side-title-row > div > button,
+#editorNewFileButton,
+#editorNewFolderButton,
+#editorRefreshExplorerButton,
+#editorCloseAllButton,
+#editorMoreActionsButton {
+  width: 24px !important;
+  height: 24px !important;
+  display: inline-grid !important;
+  place-items: center !important;
+  border: 0 !important;
+  background: transparent !important;
+  border-radius: var(--ssh-radius-xs) !important;
+  color: var(--ssh-text-3) !important;
+  transition: all var(--ssh-dur-fast) var(--ssh-ease);
+}
+.editor-side-title-row > div > button:hover,
+#editorNewFileButton:hover,
+#editorNewFolderButton:hover,
+#editorRefreshExplorerButton:hover,
+#editorCloseAllButton:hover,
+#editorMoreActionsButton:hover {
+  background: var(--ssh-surface-hover) !important;
+  color: var(--ssh-text-1) !important;
+}
+
+/* ====================== EMPTY-STATE POLISH ========================= */
+.empty-state-container {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 48px 24px !important;
+  text-align: center;
+  color: var(--ssh-text-3);
+}
+.empty-state-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+  filter: grayscale(0.15);
+  opacity: 0.85;
+}
+.empty-state-title {
+  color: var(--ssh-text-1) !important;
+  margin: 4px 0 6px !important;
+  font-weight: 600 !important;
+  font-family: var(--ssh-font-display);
+  font-size: 14px;
+}
+.empty-state-message {
+  color: var(--ssh-text-3) !important;
+  margin: 0 !important;
+  font-size: 12.5px;
+  max-width: 320px;
+}
+
+/* ====================== STATUS DOTS IN TRAY =========================*/
+#trayConnectionPill {
+  background: transparent !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-radius: var(--ssh-radius-pill) !important;
+  padding: 0 8px !important;
+}
+
+/* ====================== WALLPAPER MODAL BUTTONS ===================== */
+.wallpaper-option-btn:focus-visible {
+  outline: 2px solid var(--ssh-accent-ring);
+  outline-offset: 2px;
+}
+
+/* ====================== KBD STYLING ================================= */
+kbd {
+  background: var(--ssh-bg-elevated) !important;
+  border: 1px solid var(--ssh-border-1) !important;
+  border-bottom-width: 2px !important;
+  border-radius: var(--ssh-radius-xs) !important;
+  color: var(--ssh-text-1) !important;
+  font-family: var(--ssh-font-mono) !important;
+  font-size: 11px !important;
+  padding: 2px 6px !important;
+}
+
+/* ====================== HOST KEY DIALOG TONE ======================== */
+#hostKeyPanel .connect-card {
+  background: var(--ssh-surface-3) !important;
+}
+
+/* Accessibility — visually-hidden helper */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  border: 0 !important;
+}

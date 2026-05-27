@@ -1,7 +1,7 @@
 import { Terminal } from '../node_modules/@xterm/xterm/lib/xterm.mjs';
 import { FitAddon } from '../node_modules/@xterm/addon-fit/lib/addon-fit.mjs';
 import { state } from './state.js';
-import { escapeHtml } from './ui.js';
+import { escapeHtml, showToast } from './ui.js';
 import { focusWindow } from './windowManager.js';
 
 const terminalMountEl = () => document.querySelector("#terminalMount");
@@ -64,6 +64,9 @@ function terminalUrl() {
     rows: String(terminal?.rows || 30),
     cwd: state.terminalCwd || state.session.startPath || ".",
   });
+  if (state.apiToken) {
+    params.set("token", state.apiToken);
+  }
   return `${protocol}//${window.location.host}/terminal/${encodeURIComponent(state.session.id)}?${params}`;
 }
 
@@ -108,6 +111,30 @@ export function initializeNativeTerminal() {
   fitAddon = new FitAddon();
   terminal.loadAddon(fitAddon);
   terminal.open(mount);
+
+  terminal.attachCustomKeyEventHandler((event) => {
+    if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "c") {
+      if (event.type === "keydown") {
+        const selection = terminal.getSelection();
+        if (selection) {
+          navigator.clipboard.writeText(selection);
+          showToast("Copied terminal selection", "success");
+        }
+      }
+      return false;
+    }
+    if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key.toLowerCase() === "v") {
+      if (event.type === "keydown") {
+        navigator.clipboard.readText().then((text) => {
+          if (terminalSocket?.readyState === WebSocket.OPEN) {
+            sendTerminalMessage({ type: "input", data: text });
+          }
+        });
+      }
+      return false;
+    }
+    return true;
+  });
 
   terminal.onData((data) => {
     if (terminalSocket?.readyState === WebSocket.OPEN) {

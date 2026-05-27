@@ -44,4 +44,5 @@ export const state = {
   launchedWindowIds: new Set(),
   autoConnectTimer: null,
   countdownVal: 5,
+  apiToken: "",
 };

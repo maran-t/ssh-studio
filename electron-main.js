@@ -1,3 +1,4 @@
+const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 const { app, BrowserWindow, shell, dialog, ipcMain } = require("electron");
@@ -5,6 +6,7 @@ const { startServer, stopServer } = require("./server");
 
 let mainWindow = null;
 let isQuitting = false;
+const serverToken = crypto.randomBytes(32).toString("hex");
 
 function log(message, error) {
   try {
@@ -38,7 +40,7 @@ function ensureDesktopShortcut() {
 async function createWindow() {
   try {
     ensureDesktopShortcut();
-    const server = await startServer({ port: 28482 });
+    const server = await startServer({ port: 28482, token: serverToken });
     const address = server.address();
     const port = typeof address === "object" && address ? address.port : 28482;
     const url = `http://127.0.0.1:${port}`;
@@ -90,6 +92,53 @@ async function createWindow() {
     app.quit();
   }
 }
+
+ipcMain.handle("get-api-token", () => serverToken);
+
+ipcMain.handle("show-save-dialog", async (event, options) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  return dialog.showSaveDialog(win, options);
+});
+
+ipcMain.on("start-download", async (event, { url, localPath, transferId, apiToken }) => {
+  const http = require("node:http");
+  const fileStream = fs.createWriteStream(localPath);
+  
+  const req = http.get(url, {
+    headers: {
+      "Authorization": `Bearer ${apiToken}`
+    }
+  }, (res) => {
+    if (res.statusCode !== 200) {
+      event.sender.send("download-complete", { transferId, error: `HTTP ${res.statusCode}` });
+      fileStream.destroy();
+      fs.unlink(localPath, () => {});
+      return;
+    }
+
+    const total = parseInt(res.headers["content-length"] || "0", 10);
+    let received = 0;
+
+    res.on("data", (chunk) => {
+      fileStream.write(chunk);
+      received += chunk.length;
+      const percent = total > 0 ? Math.min(99, Math.round((received / total) * 100)) : 50;
+      event.sender.send("download-progress", { transferId, percent, received, total });
+    });
+
+    res.on("end", () => {
+      fileStream.end(() => {
+        event.sender.send("download-complete", { transferId, ok: true });
+      });
+    });
+  });
+
+  req.on("error", (err) => {
+    event.sender.send("download-complete", { transferId, error: err.message });
+    fileStream.destroy();
+    fs.unlink(localPath, () => {});
+  });
+});
 
 ipcMain.on("toggle-fullscreen", (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);

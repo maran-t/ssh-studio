@@ -72,16 +72,28 @@ export function getPrimarySelectedItem() {
 }
 
 export function getFileIconInfo(name, type) {
-  if (type === "dir") return { symbol: "📁", className: "folder" };
+  // Lucide icon name + a fallback emoji (used if Lucide hasn't loaded yet)
+  if (type === "dir") return { symbol: "📁", lucide: "folder", className: "folder" };
   const ext = name.split(".").pop().toLowerCase();
   const codeExts = ["js", "ts", "json", "py", "sh", "html", "css", "md", "rs", "go", "cpp", "c", "h", "java", "yml", "yaml", "xml"];
   const imageExts = ["png", "jpg", "jpeg", "gif", "svg", "webp", "ico"];
   const archiveExts = ["zip", "tar", "gz", "rar", "7z"];
-  
-  if (codeExts.includes(ext)) return { symbol: "💻", className: "code" };
-  if (imageExts.includes(ext)) return { symbol: "🖼️", className: "image" };
-  if (archiveExts.includes(ext)) return { symbol: "📦", className: "archive" };
-  return { symbol: "📄", className: "file" };
+  const docExts = ["pdf", "doc", "docx", "txt", "rtf"];
+  const sheetExts = ["xls", "xlsx", "csv", "tsv"];
+  const audioExts = ["mp3", "wav", "flac", "ogg", "m4a"];
+  const videoExts = ["mp4", "mov", "avi", "mkv", "webm"];
+
+  if (ext === "js" || ext === "ts") return { symbol: "💻", lucide: "file-code-2", className: "code" };
+  if (ext === "json") return { symbol: "💻", lucide: "braces", className: "code" };
+  if (ext === "md") return { symbol: "💻", lucide: "file-text", className: "code" };
+  if (codeExts.includes(ext)) return { symbol: "💻", lucide: "file-code", className: "code" };
+  if (imageExts.includes(ext)) return { symbol: "🖼️", lucide: "image", className: "image" };
+  if (archiveExts.includes(ext)) return { symbol: "📦", lucide: "archive", className: "archive" };
+  if (docExts.includes(ext)) return { symbol: "📄", lucide: "file-text", className: "file" };
+  if (sheetExts.includes(ext)) return { symbol: "📄", lucide: "sheet", className: "file" };
+  if (audioExts.includes(ext)) return { symbol: "📄", lucide: "music", className: "file" };
+  if (videoExts.includes(ext)) return { symbol: "📄", lucide: "film", className: "file" };
+  return { symbol: "📄", lucide: "file", className: "file" };
 }
 
 export function getFilteredItems() {
@@ -160,7 +172,21 @@ export function renderFiles(items = getFilteredItems(), updateCache = false) {
     const iconInfo = getFileIconInfo(item.name, item.type);
 
     const nameCell = makeCell("", "file-name");
-    const icon = makeCell(iconInfo.symbol, `file-icon ${iconInfo.className}`);
+    const icon = document.createElement("span");
+    icon.className = `file-icon ${iconInfo.className}`;
+    if (iconInfo.lucide) {
+      const lucideIcon = document.createElement("i");
+      lucideIcon.setAttribute("data-lucide", iconInfo.lucide);
+      lucideIcon.className = "ico ico-md";
+      icon.append(lucideIcon);
+      // Ask the theme bootstrap to render any new Lucide tags.
+      if (window.SshTheme && typeof window.SshTheme.refreshIcons === "function") {
+        // Debounce; the MutationObserver also catches this.
+        window.requestAnimationFrame(() => window.SshTheme.refreshIcons());
+      }
+    } else {
+      icon.textContent = iconInfo.symbol;
+    }
     const label = makeCell(item.name, "file-label");
     label.title = item.name;
     nameCell.append(icon, label);
@@ -228,6 +254,14 @@ export async function runFileAction(action, payload = {}) {
     method: "POST",
     body: JSON.stringify({ action, path: p, ...payload }),
   });
+  
+  // Synchronize cache for editor side tree explorer
+  state.editorExplorerTreeCache.set(p, response.items);
+  if (state.editorExplorerPath === p) {
+    state.editorExplorerItems = response.items;
+    renderEditorExplorer();
+  }
+
   if (payload.updateFileExplorer !== false) {
     renderFiles(response.items, true);
   }
@@ -374,56 +408,76 @@ export async function copySelected() {
     try {
       updateTransferProgress(transferId, 0, "Starting download...");
       
-      const downloadUrl = `/api/sessions/${state.session.id}/download?path=${encodeURIComponent(remotePath)}`;
-      const response = await fetch(downloadUrl);
-      if (!response.ok) {
-        throw new Error(`Server returned HTTP ${response.status}`);
-      }
+      const downloadUrl = `${window.location.origin}/api/sessions/${state.session.id}/download?path=${encodeURIComponent(remotePath)}`;
       
-      const contentLength = response.headers.get("content-length");
-      const total = contentLength ? parseInt(contentLength, 10) : 0;
-      
-      const reader = response.body.getReader();
-      const chunks = [];
-      let receivedLength = 0;
-      
-      const formatBytes = (bytes) => {
-        if (bytes === 0) return "0 B";
-        const k = 1024;
-        const sizes = ["B", "KB", "MB", "GB"];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
-      };
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        
-        chunks.push(value);
-        receivedLength += value.length;
-        
-        if (total > 0) {
-          const percent = Math.min(99, Math.round((receivedLength / total) * 100));
-          updateTransferProgress(transferId, percent, `Downloading... (${percent}%)`);
-        } else {
-          updateTransferProgress(transferId, 30, `Downloading... (${formatBytes(receivedLength)})`);
+      if (window.electronAPI) {
+        const saveRes = await window.electronAPI.showSaveDialog({
+          defaultPath: item.name,
+          title: `Download ${item.name}`
+        });
+        if (saveRes.canceled || !saveRes.filePath) {
+          updateTransferProgress(transferId, 100, "Canceled");
+          continue;
         }
+        
+        const apiToken = await window.electronAPI.getApiToken();
+        window.electronAPI.startDownload({
+          url: downloadUrl,
+          localPath: saveRes.filePath,
+          transferId,
+          apiToken
+        });
+      } else {
+        const response = await fetch(downloadUrl);
+        if (!response.ok) {
+          throw new Error(`Server returned HTTP ${response.status}`);
+        }
+        
+        const contentLength = response.headers.get("content-length");
+        const total = contentLength ? parseInt(contentLength, 10) : 0;
+        
+        const reader = response.body.getReader();
+        const chunks = [];
+        let receivedLength = 0;
+        
+        const formatBytes = (bytes) => {
+          if (bytes === 0) return "0 B";
+          const k = 1024;
+          const sizes = ["B", "KB", "MB", "GB"];
+          const i = Math.floor(Math.log(bytes) / Math.log(k));
+          return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+        };
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          chunks.push(value);
+          receivedLength += value.length;
+          
+          if (total > 0) {
+            const percent = Math.min(99, Math.round((receivedLength / total) * 100));
+            updateTransferProgress(transferId, percent, `Downloading... (${percent}%)`);
+          } else {
+            updateTransferProgress(transferId, 30, `Downloading... (${formatBytes(receivedLength)})`);
+          }
+        }
+        
+        updateTransferProgress(transferId, 99, "Saving file...");
+        
+        const blob = new Blob(chunks, { type: "application/octet-stream" });
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = item.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(blobUrl);
+        
+        updateTransferProgress(transferId, 100, "Completed");
+        showToast(`Successfully downloaded "${item.name}"`, "success");
       }
-      
-      updateTransferProgress(transferId, 99, "Saving file...");
-      
-      const blob = new Blob(chunks, { type: "application/octet-stream" });
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = item.name;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(blobUrl);
-      
-      updateTransferProgress(transferId, 100, "Completed");
-      showToast(`Successfully downloaded "${item.name}"`, "success");
     } catch (err) {
       updateTransferProgress(transferId, 100, "Failed", true);
       showToast(`Download failed for "${item.name}": ${err.message}`, "error");

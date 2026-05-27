@@ -1,9 +1,12 @@
 const crypto = require("node:crypto");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const { Client } = require("ssh2");
 const express = require("express");
 const { WebSocketServer } = require("ws");
+
+const knownHostsPath = path.join(os.homedir(), ".ssh_os_bridge_hosts.json");
 
 const app = express();
 const port = Number(process.env.PORT || 3000);
@@ -11,6 +14,8 @@ const sessions = new Map();
 const terminalSockets = new Set();
 let serverInstance = null;
 let terminalWss = null;
+let apiToken = "";
+const activeUploads = new Map();
 
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ limit: "100mb", extended: true }));
@@ -337,13 +342,63 @@ function publicSession(session, startPath) {
   };
 }
 
-function connectSsh(config) {
+function getKnownHosts() {
+  try {
+    if (fs.existsSync(knownHostsPath)) {
+      return JSON.parse(fs.readFileSync(knownHostsPath, "utf8"));
+    }
+  } catch {
+    // Ignore read errors and return empty
+  }
+  return {};
+}
+
+function saveKnownHost(host, fingerprint) {
+  try {
+    const hosts = getKnownHosts();
+    hosts[host] = fingerprint;
+    fs.mkdirSync(path.dirname(knownHostsPath), { recursive: true });
+    fs.writeFileSync(knownHostsPath, JSON.stringify(hosts, null, 2), "utf8");
+  } catch {
+    // Ignore write errors
+  }
+}
+
+function connectSsh(config, trustHostKey = false) {
   return new Promise((resolve, reject) => {
     const client = new Client();
+    let hostFingerprint = null;
+    let isKeyTrusted = false;
+    let verificationError = null;
+
     const timeout = setTimeout(() => {
       client.end();
       reject(new Error("SSH connection timed out"));
     }, 20000);
+
+    const sshConfig = {
+      ...config,
+      hostVerifier: (key, callback) => {
+        hostFingerprint = "SHA256:" + crypto.createHash("sha256").update(key).digest("base64").replace(/=/g, "");
+        const hosts = getKnownHosts();
+        const trustedFingerprint = hosts[config.host];
+        
+        if (trustHostKey) {
+          saveKnownHost(config.host, hostFingerprint);
+          isKeyTrusted = true;
+          callback(true);
+        } else if (trustedFingerprint === hostFingerprint) {
+          isKeyTrusted = true;
+          callback(true);
+        } else if (!trustedFingerprint) {
+          verificationError = new Error(`untrusted_host:new:${hostFingerprint}`);
+          callback(false);
+        } else {
+          verificationError = new Error(`untrusted_host:changed:${hostFingerprint}`);
+          callback(false);
+        }
+      }
+    };
 
     client
       .on("ready", () => {
@@ -352,28 +407,53 @@ function connectSsh(config) {
       })
       .on("error", (error) => {
         clearTimeout(timeout);
-        reject(error);
+        if (verificationError) {
+          reject(verificationError);
+        } else {
+          reject(error);
+        }
       })
-      .connect(config);
+      .connect(sshConfig);
   });
 }
 
+app.use("/api", (req, res, next) => {
+  if (!apiToken) {
+    return next();
+  }
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Missing or invalid security token." });
+  }
+  const token = authHeader.split(" ")[1];
+  if (token !== apiToken) {
+    return res.status(401).json({ error: "Missing or invalid security token." });
+  }
+  next();
+});
+
 app.post("/api/connect", async (req, res) => {
-  const { host, username, port: sshPort, privateKey, passphrase, startPath } = req.body || {};
-  if (!host || !username || !privateKey) {
-    res.status(400).json({ error: "Host, user, and PEM private key are required." });
+  const { host, username, port: sshPort, privateKey, passphrase, password, trustHostKey, startPath } = req.body || {};
+  if (!host || !username || (!privateKey && !password)) {
+    res.status(400).json({ error: "Host, username, and either private key or password are required." });
     return;
   }
 
   try {
-    const client = await connectSsh({
+    const config = {
       host,
       username,
       port: Number(sshPort || 22),
-      privateKey,
-      passphrase: passphrase || undefined,
       readyTimeout: 20000,
-    });
+    };
+    if (privateKey) {
+      config.privateKey = privateKey;
+      if (passphrase) config.passphrase = passphrase;
+    } else {
+      config.password = password;
+    }
+
+    const client = await connectSsh(config, Boolean(trustHostKey));
     const sftpClient = await sftp(client);
     const distro =
       (await exec(client, "cat /etc/os-release 2>/dev/null | grep '^PRETTY_NAME=' | cut -d= -f2- | tr -d '\"'").catch(() => "")) ||
@@ -388,7 +468,7 @@ app.post("/api/connect", async (req, res) => {
       startPath: startPath || ".",
       distro,
       shell,
-      auth: "PEM key",
+      auth: privateKey ? "PEM key" : "Password",
       client,
       sftp: sftpClient,
     };
@@ -401,6 +481,13 @@ app.post("/api/connect", async (req, res) => {
       ...listing,
     });
   } catch (error) {
+    if (error.message && error.message.startsWith("untrusted_host:")) {
+      const parts = error.message.split(":");
+      const type = parts[1]; // "new" or "changed"
+      const fingerprint = parts.slice(2).join(":");
+      res.status(412).json({ error: "untrusted_host", type, fingerprint });
+      return;
+    }
     res.status(502).json({ error: error.message || "SSH connection failed." });
   }
 });
@@ -645,6 +732,82 @@ app.post("/api/sessions/:id/upload", async (req, res) => {
   }
 });
 
+app.post("/api/sessions/:id/upload/start", async (req, res) => {
+  const session = sessions.get(req.params.id);
+  if (!session) {
+    res.status(404).json({ error: "SSH session is not active. Connect again." });
+    return;
+  }
+
+  const { name, path: remoteDir } = req.body || {};
+  if (!name || !remoteDir) {
+    res.status(400).json({ error: "Missing name or remote dir path." });
+    return;
+  }
+
+  try {
+    const basePath = await realpath(session.sftp, remoteDir);
+    const remotePath = joinRemotePath(basePath, name);
+    const stream = session.sftp.createWriteStream(remotePath);
+    const uploadId = crypto.randomUUID();
+
+    stream.on("error", (err) => {
+      activeUploads.delete(uploadId);
+    });
+
+    activeUploads.set(uploadId, { stream, remotePath, remoteDir: basePath, session });
+    res.json({ uploadId });
+  } catch (error) {
+    res.status(502).json({ error: error.message || "Unable to start upload." });
+  }
+});
+
+app.post("/api/sessions/:id/upload/chunk", async (req, res) => {
+  const { uploadId, chunk } = req.body || {};
+  if (!uploadId || chunk === undefined) {
+    res.status(400).json({ error: "Missing uploadId or chunk payload." });
+    return;
+  }
+
+  const upload = activeUploads.get(uploadId);
+  if (!upload) {
+    res.status(404).json({ error: "Active upload not found or timed out." });
+    return;
+  }
+
+  try {
+    upload.stream.write(Buffer.from(chunk, "base64"));
+    res.json({ ok: true });
+  } catch (error) {
+    activeUploads.delete(uploadId);
+    res.status(502).json({ error: error.message || "Unable to write chunk." });
+  }
+});
+
+app.post("/api/sessions/:id/upload/complete", async (req, res) => {
+  const { uploadId } = req.body || {};
+  if (!uploadId) {
+    res.status(400).json({ error: "Missing uploadId." });
+    return;
+  }
+
+  const upload = activeUploads.get(uploadId);
+  if (!upload) {
+    res.status(404).json({ error: "Active upload not found or timed out." });
+    return;
+  }
+
+  try {
+    upload.stream.end();
+    activeUploads.delete(uploadId);
+    const listing = await listPath(upload.session, upload.remoteDir);
+    res.json({ ok: true, ...listing });
+  } catch (error) {
+    activeUploads.delete(uploadId);
+    res.status(502).json({ error: error.message || "Unable to complete upload." });
+  }
+});
+
 app.post("/api/sessions/:id/disconnect", (req, res) => {
   const session = sessions.get(req.params.id);
   if (session) {
@@ -667,6 +830,7 @@ function closeSessions() {
 
 function startServer(options = {}) {
   const listenPort = Number(options.port ?? process.env.PORT ?? port);
+  apiToken = options.token ?? "";
   if (serverInstance) return Promise.resolve(serverInstance);
 
   const listen = (targetPort, canFallback) => new Promise((resolve, reject) => {
@@ -679,6 +843,13 @@ function startServer(options = {}) {
         terminalWss.on("connection", attachTerminalWebSocket);
         serverInstance.on("upgrade", (req, socket, head) => {
           if (!req.url?.startsWith("/terminal/")) {
+            socket.destroy();
+            return;
+          }
+          const urlObj = new URL(req.url, `http://${req.headers.host || "127.0.0.1"}`);
+          const tokenParam = urlObj.searchParams.get("token");
+          if (apiToken && tokenParam !== apiToken) {
+            socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
             socket.destroy();
             return;
           }

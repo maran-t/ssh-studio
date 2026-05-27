@@ -130,12 +130,15 @@ export function getSavedConnectionValues() {
 }
 
 export function collectConnectionValues() {
+  const authType = document.querySelector("#sshAuthType")?.value || "key";
   return {
     host: sshHostInput()?.value.trim() || "",
     username: sshUserInput()?.value.trim() || "",
     port: sshPortInput()?.value.trim() || "22",
     startPath: sshStartPathInput()?.value.trim() || ".",
-    privateKey: privateKeyTextarea()?.value || "",
+    privateKey: authType === "key" ? (privateKeyTextarea()?.value || "") : "",
+    password: authType === "password" ? (document.querySelector("#sshPassword")?.value || "") : "",
+    passphrase: authType === "key" ? (passphraseInput()?.value || "") : "",
   };
 }
 
@@ -178,8 +181,22 @@ export function cancelAutoConnect() {
 
 export async function request(path, options = {}) {
   const { skipSessionExpiryHandler = false, ...fetchOptions } = options;
+  
+  const headers = { "Content-Type": "application/json", ...(fetchOptions.headers || {}) };
+  if (window.electronAPI) {
+    try {
+      const token = await window.electronAPI.getApiToken();
+      if (token) {
+        state.apiToken = token;
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+    } catch (e) {
+      // Failed to retrieve token from main process
+    }
+  }
+
   const response = await fetch(path, {
-    headers: { "Content-Type": "application/json", ...(fetchOptions.headers || {}) },
+    headers,
     ...fetchOptions,
   });
   const data = await response.json().catch(() => ({}));
@@ -287,14 +304,17 @@ export async function connect(event) {
   setMessage("Connecting...", "");
   setConnectionState("Connecting", "");
 
-  const payload = {
-    host: sshHostInput()?.value.trim() || "",
-    username: sshUserInput()?.value.trim() || "",
-    port: Number(sshPortInput()?.value.trim() || 22),
-    startPath: sshStartPathInput()?.value.trim() || ".",
-    privateKey: privateKeyTextarea()?.value || "",
-    passphrase: passphraseInput()?.value || "",
-  };
+  const payload = collectConnectionValues();
+  payload.port = Number(payload.port || 22);
+
+  await connectWithPayload(payload);
+}
+
+export async function connectWithPayload(payload) {
+  const btn = connectButtonEl();
+  if (btn) btn.disabled = true;
+  setMessage("Connecting...", "");
+  setConnectionState("Connecting", "");
 
   try {
     const data = await request("/api/connect", {
@@ -346,6 +366,10 @@ export async function connect(event) {
     startHealthChecks();
     focusWindow("filesWindow");
   } catch (error) {
+    if (error.data && error.data.error === "untrusted_host") {
+      showHostKeyModal(payload, error.data.type, error.data.fingerprint);
+      return;
+    }
     state.session = null;
     document.dispatchEvent(new CustomEvent("connectionDetailsUpdated"));
     setMessage(error.message, "error");
@@ -354,6 +378,48 @@ export async function connect(event) {
   } finally {
     if (btn) btn.disabled = false;
   }
+}
+
+function showHostKeyModal(payload, type, fingerprint) {
+  const panel = document.querySelector("#hostKeyPanel");
+  if (!panel) return;
+  
+  const hostText = document.querySelector("#hostKeyHostText");
+  const typeText = document.querySelector("#hostKeyTypeText");
+  const fingerprintText = document.querySelector("#hostKeyFingerprintText");
+  
+  if (hostText) hostText.textContent = payload.host;
+  if (typeText) typeText.textContent = type === "changed" ? "ECDSA/RSA Fingerprint CHANGED (Warning!)" : "New Host Fingerprint";
+  if (fingerprintText) fingerprintText.textContent = fingerprint;
+  
+  panel.classList.remove("hidden");
+  
+  const trustBtn = document.querySelector("#hostKeyTrustBtn");
+  const cancelBtn = document.querySelector("#hostKeyCancelBtn");
+  
+  const onTrust = async () => {
+    panel.classList.add("hidden");
+    cleanup();
+    const retryPayload = { ...payload, trustHostKey: true };
+    await connectWithPayload(retryPayload);
+  };
+  
+  const onCancel = () => {
+    panel.classList.add("hidden");
+    cleanup();
+    setMessage("Connection canceled: Untrusted host key.", "error");
+    setConnectionState("Reconnect", "error");
+    const btn = connectButtonEl();
+    if (btn) btn.disabled = false;
+  };
+  
+  function cleanup() {
+    trustBtn?.removeEventListener("click", onTrust);
+    cancelBtn?.removeEventListener("click", onCancel);
+  }
+  
+  trustBtn?.addEventListener("click", onTrust);
+  cancelBtn?.addEventListener("click", onCancel);
 }
 
 export async function restoreActiveSession() {

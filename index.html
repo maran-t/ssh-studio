@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -10,6 +10,21 @@
     <link rel="stylesheet" href="./node_modules/monaco-editor/min/vs/style.css" />
     <link rel="stylesheet" href="./node_modules/@xterm/xterm/css/xterm.css" />
     <link rel="stylesheet" href="./styles.css" />
+    <!-- Pre-paint theme so the first frame matches the user's preference. -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("ssh-os-bridge.theme");
+          if (t !== "dark" && t !== "light") {
+            t = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+          }
+          document.documentElement.setAttribute("data-theme", t);
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      })();
+    </script>
+    <!-- Icons are inlined inside js/theme.js (no CDN, works offline). -->
   </head>
   <body>
     <main class="remote-desktop" aria-label="SSH Linux desktop">
@@ -316,7 +331,14 @@
             </div>
           </details>
 
-          <div class="key-selector-container">
+          <div class="login-field auth-selector-field" style="width: 100%;">
+            <select id="sshAuthType" name="authType" style="width: 100%; height: 42px; border-radius: 21px; border: 1px solid rgba(255,255,255,0.18); background: rgba(0, 0, 0, 0.22); color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; outline: none; cursor: pointer; text-align: center; text-align-last: center; backdrop-filter: blur(10px); transition: all 0.22s ease;">
+              <option value="key">Key Authentication (.pem)</option>
+              <option value="password">Password Authentication</option>
+            </select>
+          </div>
+
+          <div class="key-selector-container" id="keySelectorContainer">
             <div class="pem-pill-row">
               <label class="pem-pill-button" for="pemFile">
                 <span id="pemFileName">Load Private Key (.pem)</span>
@@ -329,9 +351,15 @@
             </div>
           </div>
 
-          <label class="login-field passphrase-field">
+          <label class="login-field passphrase-field" id="passphraseField">
             <input id="passphrase" type="password" placeholder="Passphrase (Optional)" autocomplete="current-password" />
           </label>
+
+          <div id="passwordContainer" class="password-container hidden" style="width: 100%;">
+            <label class="login-field password-field">
+              <input id="sshPassword" type="password" placeholder="SSH Password" autocomplete="current-password" />
+            </label>
+          </div>
 
           <div class="connect-actions">
             <button id="connectButton" type="submit">Sign In</button>
@@ -339,6 +367,34 @@
             <span id="connectMessage">Your credentials are processed securely in memory.</span>
           </div>
         </form>
+      </section>
+
+      <section class="connect-panel hidden" id="hostKeyPanel" role="dialog" aria-modal="true" aria-labelledby="hostKeyTitle" style="z-index: 99999;">
+        <div class="connect-card" style="gap: 16px; background: rgba(13, 17, 23, 0.95); border: 1px solid rgba(255, 255, 255, 0.12); padding: 28px; border-radius: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.65); box-sizing: border-box; width: min(390px, 100%);">
+          <div class="login-avatar-container" style="margin-bottom: 8px;">
+            <div class="login-avatar" style="border-color: #f59e0b; background: rgba(245, 158, 11, 0.1); margin: 0 auto 12px;">
+              <div class="avatar-glow" style="background: radial-gradient(circle, rgba(245, 158, 11, 0.3) 0%, transparent 70%);"></div>
+              <span style="font-size: 32px; line-height: 96px;">⚠️</span>
+            </div>
+            <h2 id="hostKeyTitle" style="color: #f59e0b; font-size: 19px; text-shadow: none;">Untrusted SSH Host</h2>
+            <p class="login-subtitle" id="hostKeySubtitle" style="font-size: 12.5px; text-shadow: none;">The server's identity has not been verified.</p>
+          </div>
+          
+          <div style="width: 100%; display: flex; flex-direction: column; gap: 8px; font-family: monospace; font-size: 11px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); padding: 12px; border-radius: 8px; box-sizing: border-box; word-break: break-all; color: #cbd5e1; text-align: left; line-height: 1.4;">
+            <div>Host: <strong id="hostKeyHostText" style="color: #fff;">192.168.1.42</strong></div>
+            <div>Key Type: <span id="hostKeyTypeText" style="color: #94a3b8;">ECDSA (SHA256)</span></div>
+            <div style="margin-top: 4px;">Fingerprint:<br/><strong id="hostKeyFingerprintText" style="color: #f87171;">SHA256:abc123xyz...</strong></div>
+          </div>
+          
+          <p style="font-size: 11.5px; color: rgba(255,255,255,0.6); text-align: center; margin: 0; padding: 0 4px; line-height: 1.4; text-shadow: none;">
+            Are you sure you want to trust this remote machine and establish the connection?
+          </p>
+          
+          <div class="connect-actions" style="flex-direction: row; gap: 10px; width: 100%; justify-content: center; margin-top: 10px;">
+            <button id="hostKeyTrustBtn" type="button" style="background: #eab308; color: #000; border: 0; width: 130px; font-weight: 700; min-height: 38px; border-radius: 19px; cursor: pointer; box-shadow: none;">Trust & Connect</button>
+            <button id="hostKeyCancelBtn" type="button" style="background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); width: 110px; min-height: 38px; border-radius: 19px; cursor: pointer; box-shadow: none;">Cancel</button>
+          </div>
+        </div>
       </section>
 
       <section class="window files-window minimized" id="filesWindow" aria-labelledby="filesTitle">
@@ -786,7 +842,7 @@
           <button class="wallpaper-option-btn" data-wallpaper="emerald" type="button" style="height: 80px; border-radius: 8px; border: 2px solid transparent; background: linear-gradient(135deg, #022c22, #064e3b, #0f766e); cursor: pointer; display: flex; align-items: flex-end; padding: 6px; outline: 0;"><span style="font-size: 11px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 6px; border-radius: 4px;">Emerald</span></button>
           
           <button class="wallpaper-option-btn" data-wallpaper="sunset" type="button" style="height: 80px; border-radius: 8px; border: 2px solid transparent; background: linear-gradient(135deg, #451a03, #78350f, #9a3412); cursor: pointer; display: flex; align-items: flex-end; padding: 6px; outline: 0;"><span style="font-size: 11px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 6px; border-radius: 4px;">Sunset</span></button>
-          
+
           <button class="wallpaper-option-btn" data-wallpaper="neon" type="button" style="height: 80px; border-radius: 8px; border: 2px solid transparent; background: linear-gradient(135deg, #09090b, #180828, #032830); cursor: pointer; display: flex; align-items: flex-end; padding: 6px; outline: 0;"><span style="font-size: 11px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 6px; border-radius: 4px;">Neon Cyber</span></button>
         </div>
       </div>
@@ -795,5 +851,7 @@
     <script src="./node_modules/gsap/dist/gsap.min.js"></script>
     <script src="./node_modules/monaco-editor/min/vs/loader.js"></script>
     <script type="module" src="./script.js"></script>
+    <!-- Theme + Lucide icon bootstrap (loads after Lucide UMD is ready). -->
+    <script src="./js/theme.js" defer></script>
   </body>
 </html>

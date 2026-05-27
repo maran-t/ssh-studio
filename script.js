@@ -139,11 +139,41 @@ if (window.electronAPI) {
   window.electronAPI.onFullscreenChange((isFullscreen) => {
     updateFullscreenButtonUI(isFullscreen);
   });
+  window.electronAPI.onDownloadProgress(({ transferId, percent }) => {
+    updateTransferProgress(transferId, percent, `Downloading... (${percent}%)`);
+  });
+  window.electronAPI.onDownloadComplete(({ transferId, ok, error }) => {
+    if (ok) {
+      updateTransferProgress(transferId, 100, "Completed");
+      showToast("Download completed successfully", "success");
+    } else {
+      updateTransferProgress(transferId, 100, "Failed", true);
+      showToast(`Download failed: ${error}`, "error");
+    }
+  });
 }
 
 document.addEventListener("fullscreenchange", () => {
   if (!window.electronAPI) {
     updateFullscreenButtonUI(!!document.fullscreenElement);
+  }
+});
+
+const sshAuthType = document.querySelector("#sshAuthType");
+sshAuthType?.addEventListener("change", () => {
+  const type = sshAuthType.value;
+  const keySelector = document.querySelector("#keySelectorContainer");
+  const passphraseField = document.querySelector("#passphraseField");
+  const passwordContainer = document.querySelector("#passwordContainer");
+  
+  if (type === "key") {
+    keySelector?.classList.remove("hidden");
+    passphraseField?.classList.remove("hidden");
+    passwordContainer?.classList.add("hidden");
+  } else {
+    keySelector?.classList.add("hidden");
+    passphraseField?.classList.add("hidden");
+    passwordContainer?.classList.remove("hidden");
   }
 });
 
@@ -296,39 +326,71 @@ async function uploadLocalFiles(files) {
   
   focusWindow("transferWindow");
   
+  const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
+  
   for (const file of files) {
-    const reader = new FileReader();
     const transferId = addTransferQueue(file.name, "Upload");
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
     
-    reader.onload = async (e) => {
-      try {
-        const base64 = e.target.result.split(",")[1];
-        updateTransferProgress(transferId, 45, "Uploading...");
+    try {
+      updateTransferProgress(transferId, 0, "Starting upload...");
+      
+      const startRes = await request(`/api/sessions/${state.session.id}/upload/start`, {
+        method: "POST",
+        body: JSON.stringify({
+          name: file.name,
+          path: state.transferPath || state.session.startPath || "."
+        })
+      });
+      
+      const { uploadId } = startRes;
+      
+      for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+        const start = chunkIndex * CHUNK_SIZE;
+        const end = Math.min(file.size, start + CHUNK_SIZE);
+        const blob = file.slice(start, end);
         
-        await request(`/api/sessions/${state.session.id}/upload`, {
-          method: "POST",
-          body: JSON.stringify({
-            name: file.name,
-            path: state.transferPath || state.session.startPath || ".",
-            base64: base64
-          })
+        const chunkBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result.split(",")[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
         });
         
-        updateTransferProgress(transferId, 100, "Completed");
-        showToast(`Successfully uploaded "${file.name}"`, "success");
+        const progress = Math.round(((chunkIndex + 1) / totalChunks) * 95);
+        updateTransferProgress(transferId, progress, `Uploading chunk ${chunkIndex + 1}/${totalChunks}...`);
         
-        if (state.transferPath === state.currentPath) {
-          openPath(state.currentPath || ".");
-        }
-        if (state.transferPath === state.editorExplorerPath) {
-          openEditorExplorerPath(state.editorExplorerPath || ".");
-        }
-      } catch (err) {
-        updateTransferProgress(transferId, 100, "Failed", true);
-        showToast(`Upload failed for "${file.name}": ${err.message}`, "error");
+        await request(`/api/sessions/${state.session.id}/upload/chunk`, {
+          method: "POST",
+          body: JSON.stringify({
+            uploadId,
+            chunk: chunkBase64
+          })
+        });
       }
-    };
-    reader.readAsDataURL(file);
+      
+      updateTransferProgress(transferId, 99, "Completing upload...");
+      const completeRes = await request(`/api/sessions/${state.session.id}/upload/complete`, {
+        method: "POST",
+        body: JSON.stringify({ uploadId })
+      });
+      
+      updateTransferProgress(transferId, 100, "Completed");
+      showToast(`Successfully uploaded "${file.name}"`, "success");
+      
+      if (state.transferPath) {
+        state.editorExplorerTreeCache.delete(state.transferPath);
+      }
+      if (state.transferPath === state.currentPath) {
+        renderFiles(completeRes.items, true);
+      }
+      if (state.transferPath === state.editorExplorerPath) {
+        openEditorExplorerPath(state.editorExplorerPath || ".");
+      }
+    } catch (err) {
+      updateTransferProgress(transferId, 100, "Failed", true);
+      showToast(`Upload failed for "${file.name}": ${err.message}`, "error");
+    }
   }
 }
 
