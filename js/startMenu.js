@@ -75,6 +75,14 @@ export function openStartMenu() {
   renderRecentApps();
   menu.classList.remove("hidden");
   menu.setAttribute("aria-hidden", "false");
+  
+  const searchInput = document.querySelector("#startMenuSearch");
+  if (searchInput) {
+    searchInput.value = "";
+    searchInput.dispatchEvent(new Event("input"));
+    setTimeout(() => searchInput.focus(), 50);
+  }
+
   if (state.isAnimationEnabled && window.gsap) {
     window.gsap.killTweensOf(menu);
     window.gsap.fromTo(
@@ -124,4 +132,66 @@ export function toggleStartMenu() {
   } else {
     closeStartMenu();
   }
+}
+
+export function initializeStartMenuSearch() {
+  const searchInput = document.querySelector("#startMenuSearch");
+  if (!searchInput) return;
+
+  searchInput.addEventListener("input", () => {
+    const query = searchInput.value.toLowerCase().trim();
+    const pinnedApps = document.querySelectorAll(".launcher-app");
+    const recommendedApps = document.querySelectorAll(".launcher-recent-item");
+    const sections = document.querySelectorAll(".launcher-section");
+
+    let hasPinnedMatches = false;
+    pinnedApps.forEach(app => {
+      const title = app.querySelector("strong")?.textContent.toLowerCase() || "";
+      const subtitle = app.querySelector("small")?.textContent.toLowerCase() || "";
+      if (title.includes(query) || subtitle.includes(query)) {
+        app.style.display = "";
+        hasPinnedMatches = true;
+      } else {
+        app.style.display = "none";
+      }
+    });
+
+    let hasRecommendedMatches = false;
+    recommendedApps.forEach(app => {
+      const title = app.querySelector("strong")?.textContent.toLowerCase() || "";
+      const subtitle = app.querySelector("small")?.textContent.toLowerCase() || "";
+      if (title.includes(query) || subtitle.includes(query)) {
+        app.style.display = "";
+        hasRecommendedMatches = true;
+      } else {
+        app.style.display = "none";
+      }
+    });
+
+    // Show/hide sections
+    sections.forEach(sec => {
+      if (sec.classList.contains("launcher-recent-section")) {
+        sec.style.display = hasRecommendedMatches ? "" : "none";
+      } else {
+        sec.style.display = hasPinnedMatches ? "" : "none";
+      }
+    });
+
+    // Check if we need to show a "No results" element
+    let noResults = document.querySelector("#startMenuNoResults");
+    if (!hasPinnedMatches && !hasRecommendedMatches) {
+      if (!noResults) {
+        noResults = document.createElement("div");
+        noResults.id = "startMenuNoResults";
+        noResults.className = "editor-side-empty";
+        noResults.style.cssText = "padding: 40px 20px; text-align: center; color: #8c8c8c; font-size: 14px;";
+        noResults.textContent = "No matching apps or recommended tools.";
+        document.querySelector(".start-app-pane")?.appendChild(noResults);
+      } else {
+        noResults.style.display = "block";
+      }
+    } else {
+      if (noResults) noResults.style.display = "none";
+    }
+  });
 }

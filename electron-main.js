@@ -1,6 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
-const { app, BrowserWindow, shell, dialog } = require("electron");
+const { app, BrowserWindow, shell, dialog, ipcMain } = require("electron");
 const { startServer, stopServer } = require("./server");
 
 let mainWindow = null;
@@ -55,6 +55,7 @@ async function createWindow() {
         nodeIntegration: false,
         contextIsolation: true,
         sandbox: false,
+        preload: path.join(__dirname, "preload.js"),
       },
     });
 
@@ -73,6 +74,14 @@ async function createWindow() {
       return { action: "deny" };
     });
 
+    mainWindow.on("enter-full-screen", () => {
+      mainWindow.webContents.send("fullscreen-change", true);
+    });
+
+    mainWindow.on("leave-full-screen", () => {
+      mainWindow.webContents.send("fullscreen-change", false);
+    });
+
     log(`Loading ${url}`);
     await mainWindow.loadURL(url);
   } catch (error) {
@@ -81,6 +90,13 @@ async function createWindow() {
     app.quit();
   }
 }
+
+ipcMain.on("toggle-fullscreen", (event) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (win) {
+    win.setFullScreen(!win.isFullScreen());
+  }
+});
 
 app.whenReady().then(createWindow);
 

@@ -41,7 +41,7 @@
       <section class="start-menu-panel hidden" id="startMenuPanel" aria-label="Start menu" aria-hidden="true">
         <div class="start-search">
           <span aria-hidden="true">Search</span>
-          <input type="search" placeholder="Search apps, files, and remote actions" aria-label="Search apps, files, and remote actions" disabled />
+          <input id="startMenuSearch" type="search" placeholder="Search apps, files, and remote actions" aria-label="Search apps, files, and remote actions" />
         </div>
         <div class="start-app-pane">
           <div class="launcher-section">
@@ -110,7 +110,7 @@
 
       <footer class="taskbar-shell taskbar-open" aria-label="Windows taskbar">
         <nav class="workspace-tabs" aria-label="Window menu">
-          <button class="taskbar-weather" type="button" title="Weather">
+          <button class="taskbar-weather" id="taskbarWeatherButton" type="button" title="Weather">
             <span class="weather-icon" aria-hidden="true"></span>
             <span class="weather-copy">
               <strong>29°C</strong>
@@ -118,13 +118,34 @@
             </span>
           </button>
 
+          <!-- Weather Popup Panel -->
+          <div id="weatherPopup" class="weather-popup hidden" style="position: absolute; bottom: 50px; left: 8px; width: 280px; background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(88, 166, 255, 0.2); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.65); color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; padding: 16px; z-index: 999999; display: flex; flex-direction: column; gap: 8px; user-select: none;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+              <strong style="font-size: 14px; font-weight: 600; color: #58a6ff;">Chennai, India</strong>
+              <span style="font-size: 11px; color: #8b949e;">Local Weather</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 14px; margin-top: 6px;">
+              <span style="font-size: 32px;">☀️</span>
+              <div>
+                <span style="font-size: 28px; font-weight: 700; color: #f8fafc;">29°C</span>
+                <div style="font-size: 12px; color: #8b949e;">Mostly Clear</div>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; font-size: 11px; color: #8b949e;">
+              <div>Humidity: <strong style="color: #c9d1d9;">62%</strong></div>
+              <div>Wind: <strong style="color: #c9d1d9;">12 km/h</strong></div>
+              <div>Visibility: <strong style="color: #c9d1d9;">10 km</strong></div>
+              <div>Precipitation: <strong style="color: #c9d1d9;">10%</strong></div>
+            </div>
+          </div>
+
           <div class="taskbar-center">
             <button class="start-button" type="button" aria-label="Start" title="Start">
               <svg class="task-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M3 4.4 10.9 3.3v8.15H3V4.4Zm9.1-1.25L21 2v9.45h-8.9V3.15ZM3 12.55h7.9v8.15L3 19.6v-7.05Zm9.1 0H21V22l-8.9-1.15v-8.3Z" />
               </svg>
             </button>
-            <button class="taskbar-search" type="button" aria-label="Search" title="Search">
+            <button class="taskbar-search" id="taskbarSearchButton" type="button" aria-label="Search" title="Search">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M10.75 4.25a6.5 6.5 0 0 1 5.17 10.44l3.2 3.19-1.24 1.24-3.19-3.2A6.5 6.5 0 1 1 10.75 4.25Zm0 1.75a4.75 4.75 0 1 0 0 9.5 4.75 4.75 0 0 0 0-9.5Z" />
               </svg>
@@ -181,13 +202,81 @@
               <svg viewBox="0 0 24 24" class="tray-svg"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
               <span class="tray-badge hidden" id="trayBadge">0</span>
             </div>
-            <button class="taskbar-clock" type="button" title="Calendar">
+            <button class="taskbar-clock" id="taskbarClockButton" type="button" title="Calendar">
               <span id="taskbarTime">--:--</span>
               <small id="taskbarDate">--/--/----</small>
             </button>
           </div>
         </nav>
       </footer>
+
+      <!-- Calendar Popup Panel -->
+      <div id="calendarPopup" class="calendar-popup hidden" style="position: absolute; bottom: 50px; right: 8px; width: 320px; background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(88, 166, 255, 0.2); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.65); color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; padding: 16px; z-index: 999999; display: flex; flex-direction: column; gap: 12px; user-select: none;">
+        <div class="calendar-header" style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+          <strong id="calendarMonthYear" style="font-size: 14px; font-weight: 600; color: #58a6ff;">May 2026</strong>
+          <div style="display: flex; gap: 4px;">
+            <button id="prevMonthBtn" type="button" style="background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: #8b949e; cursor: pointer; padding: 2px 8px; font-size: 12px; font-weight: bold; transition: all 0.15s;">&lt;</button>
+            <button id="nextMonthBtn" type="button" style="background: transparent; border: 1px solid rgba(255,255,255,0.15); border-radius: 4px; color: #8b949e; cursor: pointer; padding: 2px 8px; font-size: 12px; font-weight: bold; transition: all 0.15s;">&gt;</button>
+          </div>
+        </div>
+        <div class="calendar-weekdays" style="display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 11px; font-weight: 700; color: #8b949e; margin-top: 4px;">
+          <span>SU</span><span>MO</span><span>TU</span><span>WE</span><span>TH</span><span>FR</span><span>SA</span>
+        </div>
+        <div id="calendarDays" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; font-size: 12px; margin-top: 4px;">
+          <!-- Days will be dynamically rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Wifi Popup -->
+      <div id="wifiPopup" class="tray-popup hidden" style="position: absolute; bottom: 50px; right: 120px; width: 260px; background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(88, 166, 255, 0.2); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.65); color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 14px; z-index: 999999; display: flex; flex-direction: column; gap: 8px; user-select: none;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
+          <strong style="font-size: 13px; color: #58a6ff;">Wi-Fi Network</strong>
+          <span style="font-size: 11px; color: #56d364; font-weight: bold;">Connected</span>
+        </div>
+        <div style="font-size: 12px; display: flex; align-items: center; justify-content: space-between; padding: 4px 0;">
+          <span>SSID: <strong>SSH-Studio-Secure</strong></span>
+          <span style="color: #58a6ff;">Full Signal</span>
+        </div>
+        <div style="font-size: 11px; color: #8b949e; line-height: 1.4;">
+          Security: WPA3 Enterprise<br/>
+          IP Address: 192.168.1.144
+        </div>
+      </div>
+
+      <!-- Volume Popup -->
+      <div id="volumePopup" class="tray-popup hidden" style="position: absolute; bottom: 50px; right: 80px; width: 220px; background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(88, 166, 255, 0.2); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.65); color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 14px; z-index: 999999; display: flex; flex-direction: column; gap: 8px; user-select: none;">
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+          <strong style="font-size: 13px; color: #58a6ff;">Volume Control</strong>
+          <span id="volumeLevelText" style="font-size: 12px; font-weight: bold; color: #c9d1d9;">80%</span>
+        </div>
+        <input type="range" id="volumeSlider" min="0" max="100" value="80" style="width: 100%; height: 4px; border-radius: 2px; background: #30363d; outline: none; cursor: pointer;" />
+      </div>
+
+      <!-- Battery Popup -->
+      <div id="batteryPopup" class="tray-popup hidden" style="position: absolute; bottom: 50px; right: 40px; width: 220px; background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(88, 166, 255, 0.2); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.65); color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 14px; z-index: 999999; display: flex; flex-direction: column; gap: 8px; user-select: none;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
+          <strong style="font-size: 13px; color: #58a6ff;">Power Status</strong>
+          <span style="font-size: 11px; color: #f69d50; font-weight: bold;">Discharging</span>
+        </div>
+        <div style="font-size: 12px; display: flex; align-items: center; justify-content: space-between; padding: 4px 0;">
+          <span>Remaining: <strong style="font-size: 14px; color: #f8fafc;">92%</strong></span>
+          <span style="color: #8b949e;">~6 hrs left</span>
+        </div>
+        <div style="font-size: 11px; color: #8b949e;">
+          Performance Mode: Balanced
+        </div>
+      </div>
+
+      <!-- Notification Popup -->
+      <div id="notificationPopup" class="tray-popup hidden" style="position: absolute; bottom: 50px; right: 10px; width: 300px; background: rgba(13, 17, 23, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(88, 166, 255, 0.2); border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.65); color: #c9d1d9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 14px; z-index: 999999; display: flex; flex-direction: column; gap: 8px; user-select: none;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px;">
+          <strong style="font-size: 13px; color: #58a6ff;">Notifications Center</strong>
+          <button id="clearNotificationsBtn" type="button" style="background: transparent; border: 0; color: #ff7b72; cursor: pointer; font-size: 11px; font-weight: bold; transition: opacity 0.15s; outline: 0;">Clear All</button>
+        </div>
+        <div id="notificationList" style="display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; font-size: 12px;">
+          <div class="empty-notification" style="color: #8b949e; text-align: center; padding: 20px 0;">No new notifications.</div>
+        </div>
+      </div>
 
       <section class="connect-panel hidden" id="connectPanel" role="dialog" aria-modal="true" aria-labelledby="connectTitle">
         <form class="connect-card" id="connectForm">
@@ -295,20 +384,30 @@
                 <button id="copySelectedButton" type="button">Download</button>
                 </div>
               </details>
+              <button id="togglePreviewPaneBtn" type="button" style="margin-left: 6px;" title="Toggle File Preview Panel">👁️ Preview</button>
             </div>
             <div class="file-search-container">
               <input id="fileSearch" type="search" placeholder="Search files..." autocomplete="off" spellcheck="false" />
             </div>
           </div>
         </div>
-        <div class="file-table" id="fileTable" role="table" aria-label="Remote files" tabindex="0">
-          <div class="file-row table-head" role="row">
-            <span class="sort-header" data-sort="name" id="sortHeaderName">Name <span class="sort-direction-icon"></span></span>
-            <span class="sort-header" data-sort="type" id="sortHeaderType">Kind <span class="sort-direction-icon"></span></span>
-            <span class="sort-header" data-sort="size" id="sortHeaderSize">Size <span class="sort-direction-icon"></span></span>
-            <span class="sort-header" data-sort="modified" id="sortHeaderModified">Modified <span class="sort-direction-icon"></span></span>
+        <div class="file-explorer-content-container" style="display: flex; flex: 1; min-height: 0; width: 100%; overflow: hidden; background: #0f172a;">
+          <div class="file-table" id="fileTable" role="table" aria-label="Remote files" tabindex="0" style="flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden;">
+            <div class="file-row table-head" role="row">
+              <span class="sort-header" data-sort="name" id="sortHeaderName">Name <span class="sort-direction-icon"></span></span>
+              <span class="sort-header" data-sort="type" id="sortHeaderType">Kind <span class="sort-direction-icon"></span></span>
+              <span class="sort-header" data-sort="size" id="sortHeaderSize">Size <span class="sort-direction-icon"></span></span>
+              <span class="sort-header" data-sort="modified" id="sortHeaderModified">Modified <span class="sort-direction-icon"></span></span>
+            </div>
+            <div id="fileRows" style="flex: 1; overflow-y: auto;"></div>
           </div>
-          <div id="fileRows"></div>
+          
+          <div id="filePreviewPane" class="file-preview-pane hidden" style="width: 280px; background: rgba(30, 41, 59, 0.45); display: flex; flex-direction: column; min-width: 0; height: 100%; border-left: 1px solid rgba(255, 255, 255, 0.08); padding: 12px; overflow-y: auto; box-sizing: border-box;">
+            <div style="font-size: 11px; text-transform: uppercase; color: #58a6ff; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 6px; margin-bottom: 8px; letter-spacing: 0.5px;">File Preview</div>
+            <div id="filePreviewContent" style="flex: 1; display: flex; flex-direction: column; gap: 8px; font-size: 13px; min-height: 0;">
+              <div style="color: #8b949e; text-align: center; padding-top: 30px;">Select a file to see preview</div>
+            </div>
+          </div>
         </div>
         <footer class="window-footer">
           <span id="itemCount">0 items</span>
@@ -335,7 +434,12 @@
             <button type="button">Terminal</button>
             <button type="button">Help</button>
           </div>
-          <div class="editor-command-center">create-a-ssh-app-ui-based</div>
+          <button class="editor-command-center" id="editorCommandCenter" type="button" style="cursor: pointer; justify-self: stretch; outline: 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" style="opacity: 0.7;">
+              <path d="M11.5 7.5a.5.5 0 0 1 .5-.5h3.5a.5.5 0 0 1 0 1H12a.5.5 0 0 1-.5-.5zm-9 0a.5.5 0 0 1 .5-.5H6.5a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm3.5-3a.5.5 0 0 1 .5-.5h5.5a.5.5 0 0 1 0 1H6a.5.5 0 0 1-.5-.5zm3 6a.5.5 0 0 1 .5-.5h2.5a.5.5 0 0 1 0 1H9a.5.5 0 0 1-.5-.5z"/>
+            </svg>
+            <span id="editorCommandCenterText">create-a-ssh-app-ui-based</span>
+          </button>
           <div class="window-actions"></div>
         </div>
         <div class="editor-workbench" data-editor-view="explorer">
@@ -362,13 +466,16 @@
               <div class="editor-folder-path" id="editorFolderPath">No folder open</div>
               <div class="editor-folder-list" id="editorFolderList"></div>
             </div>
-            <div class="editor-side-section editor-view-panel" data-editor-panel="search">
+            <div class="editor-side-section editor-view-panel" data-editor-panel="search" style="grid-template-rows: auto auto auto minmax(0, 1fr);">
               <div class="editor-side-title-row">
                 <span class="editor-side-title">Search</span>
               </div>
-              <input class="editor-side-input" id="editorWorkbenchSearch" type="search" placeholder="Search" autocomplete="off" spellcheck="false" />
-              <input class="editor-side-input" id="editorWorkbenchReplace" type="search" placeholder="Replace" autocomplete="off" spellcheck="false" />
-              <div class="editor-side-empty">Search is scoped to open files for now.</div>
+              <input class="editor-side-input" id="editorWorkbenchSearch" type="search" placeholder="Search" autocomplete="off" spellcheck="false" style="margin-bottom: 4px;" />
+              <input class="editor-side-input" id="editorWorkbenchReplace" type="search" placeholder="Replace" autocomplete="off" spellcheck="false" style="margin-bottom: 8px;" />
+              <div class="editor-search-results-container" style="overflow-y: auto; display: flex; flex-direction: column; min-height: 0; flex: 1;">
+                <div class="editor-side-empty" id="editorSearchEmpty">Search is scoped to open files.</div>
+                <div class="editor-search-results" id="editorSearchResults" style="display: none; flex-direction: column; gap: 4px; padding: 0 10px 10px;"></div>
+              </div>
             </div>
             <div class="editor-side-section editor-view-panel" data-editor-panel="settings">
               <div class="editor-side-title-row">
@@ -414,32 +521,60 @@
                       <button type="button">Workspace</button>
                     </div>
                   </div>
-                  <div class="settings-body">
-                    <section class="setting-row">
-                      <div>
-                        <strong>Editor: Font Size</strong>
-                        <span>Controls the font size in pixels.</span>
-                      </div>
-                      <input id="editorFontSizeSetting" type="number" min="10" max="24" value="13" />
-                    </section>
-                    <section class="setting-row">
-                      <div>
-                        <strong>Editor: Minimap Enabled</strong>
-                        <span>Controls whether the minimap is shown.</span>
-                      </div>
-                      <input id="editorMinimapSetting" type="checkbox" />
-                    </section>
-                    <section class="setting-row">
-                      <div>
-                        <strong>Workbench: Color Theme</strong>
-                        <span>Specifies the color theme used in the editor.</span>
-                      </div>
-                      <select id="editorThemeSetting">
-                        <option value="m2-dark">M2 Dark</option>
-                        <option value="vs-dark">Dark+</option>
-                        <option value="vs">Light+</option>
-                      </select>
-                    </section>
+                  <div class="settings-body" style="overflow-y: auto; height: calc(100% - 70px); padding-bottom: 20px;">
+                    <div id="settings-commonly-used" class="settings-group">
+                      <h3 style="margin: 10px 0 15px; color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 5px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Commonly Used</h3>
+                      <section class="setting-row">
+                        <div>
+                          <strong>Editor: Font Size</strong>
+                          <span>Controls the font size in pixels.</span>
+                        </div>
+                        <input id="editorFontSizeSetting" type="number" min="10" max="24" value="13" />
+                      </section>
+                      <section class="setting-row">
+                        <div>
+                          <strong>Editor: Minimap Enabled</strong>
+                          <span>Controls whether the minimap is shown.</span>
+                        </div>
+                        <input id="editorMinimapSetting" type="checkbox" />
+                      </section>
+                    </div>
+
+                    <div id="settings-text-editor" class="settings-group" style="margin-top: 25px;">
+                      <h3 style="margin: 10px 0 15px; color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 5px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Text Editor</h3>
+                      <section class="setting-row">
+                        <div>
+                          <strong>Editor: Tab Size</strong>
+                          <span>Number of spaces equivalent to one tab.</span>
+                        </div>
+                        <input type="number" value="4" style="width: 60px;" disabled />
+                      </section>
+                      <section class="setting-row">
+                        <div>
+                          <strong>Editor: Word Wrap</strong>
+                          <span>Controls how lines should wrap.</span>
+                        </div>
+                        <select disabled>
+                          <option>on</option>
+                          <option>off</option>
+                        </select>
+                      </section>
+                    </div>
+
+                    <div id="settings-workbench" class="settings-group" style="margin-top: 25px;">
+                      <h3 style="margin: 10px 0 15px; color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 5px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Workbench</h3>
+                      <section class="setting-row">
+                        <div>
+                          <strong>Workbench: Color Theme</strong>
+                          <span>Specifies the color theme used in the editor.</span>
+                        </div>
+                        <select id="editorThemeSetting">
+                          <option value="m2-dark">M2 Dark</option>
+                          <option value="vs-dark">Dark+</option>
+                          <option value="vs">Light+</option>
+                        </select>
+                      </section>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -628,6 +763,33 @@
       <button class="context-item" id="tabContextCloseSaved" type="button">Close Saved</button>
       <hr class="context-divider" />
       <button class="context-item danger" id="tabContextCloseAll" type="button">Close All</button>
+    </div>
+
+    <!-- Desktop Right-Click Context Menu -->
+    <div id="desktopBgContextMenu" class="taskbar-context-menu hidden">
+      <button class="context-item" id="contextChangeBg" type="button">Change Wallpaper...</button>
+      <button class="context-item" id="contextShowDesktop" type="button">Show Desktop</button>
+    </div>
+
+    <!-- Wallpaper Modal -->
+    <div id="wallpaperModal" class="connect-panel hidden" style="z-index: 1000005;">
+      <div class="connect-card" style="width: 440px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px;">
+          <h3 style="margin: 0; color: #58a6ff; font-size: 15px;">Choose Desktop Background</h3>
+          <button id="closeWallpaperBtn" type="button" style="background: transparent; border: 0; color: #8b949e; cursor: pointer; font-size: 18px; font-weight: bold; line-height: 1; outline: 0;">&times;</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <button class="wallpaper-option-btn" data-wallpaper="default" type="button" style="height: 80px; border-radius: 8px; border: 2px solid rgba(88,166,255,0.4); background: linear-gradient(145deg, #16273d 0%, #48566e 50%, #d8a86c 100%); cursor: pointer; display: flex; align-items: flex-end; padding: 6px; outline: 0;"><span style="font-size: 11px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 6px; border-radius: 4px;">Default Aura</span></button>
+          
+          <button class="wallpaper-option-btn" data-wallpaper="midnight" type="button" style="height: 80px; border-radius: 8px; border: 2px solid transparent; background: linear-gradient(135deg, #0f172a, #1e1b4b, #311042); cursor: pointer; display: flex; align-items: flex-end; padding: 6px; outline: 0;"><span style="font-size: 11px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 6px; border-radius: 4px;">Midnight</span></button>
+          
+          <button class="wallpaper-option-btn" data-wallpaper="emerald" type="button" style="height: 80px; border-radius: 8px; border: 2px solid transparent; background: linear-gradient(135deg, #022c22, #064e3b, #0f766e); cursor: pointer; display: flex; align-items: flex-end; padding: 6px; outline: 0;"><span style="font-size: 11px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 6px; border-radius: 4px;">Emerald</span></button>
+          
+          <button class="wallpaper-option-btn" data-wallpaper="sunset" type="button" style="height: 80px; border-radius: 8px; border: 2px solid transparent; background: linear-gradient(135deg, #451a03, #78350f, #9a3412); cursor: pointer; display: flex; align-items: flex-end; padding: 6px; outline: 0;"><span style="font-size: 11px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 6px; border-radius: 4px;">Sunset</span></button>
+          
+          <button class="wallpaper-option-btn" data-wallpaper="neon" type="button" style="height: 80px; border-radius: 8px; border: 2px solid transparent; background: linear-gradient(135deg, #09090b, #180828, #032830); cursor: pointer; display: flex; align-items: flex-end; padding: 6px; outline: 0;"><span style="font-size: 11px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 6px; border-radius: 4px;">Neon Cyber</span></button>
+        </div>
+      </div>
     </div>
 
     <script src="./node_modules/gsap/dist/gsap.min.js"></script>

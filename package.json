@@ -28,6 +28,7 @@
     "productName": "SSH OS Bridge",
     "files": [
       "electron-main.js",
+      "preload.js",
       "server.js",
       "index.html",
       "script.js",

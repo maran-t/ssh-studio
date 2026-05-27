@@ -542,7 +542,7 @@ app.post("/api/sessions/:id/file-action", async (req, res) => {
     return;
   }
 
-  const { action, path: requestedPath, name, targetName, type } = req.body || {};
+  const { action, path: requestedPath, name, targetName, type, sourcePath, destPath } = req.body || {};
   try {
     const basePath = await realpath(session.sftp, requestedPath || session.startPath || ".");
     if (action === "new-file") {
@@ -556,6 +556,17 @@ app.post("/api/sessions/:id/file-action", async (req, res) => {
       const attrs = type ? { isDirectory: () => type === "dir" } : await statPath(session.sftp, targetPath);
       if (attrs.isDirectory()) await rmdirRecursive(session.sftp, targetPath);
       else await unlinkPath(session.sftp, targetPath);
+    } else if (action === "copy") {
+      const srcStream = session.sftp.createReadStream(sourcePath);
+      const destStream = session.sftp.createWriteStream(destPath);
+      await new Promise((resolve, reject) => {
+        srcStream.on("error", reject);
+        destStream.on("error", reject);
+        destStream.on("close", resolve);
+        srcStream.pipe(destStream);
+      });
+    } else if (action === "move") {
+      await renamePath(session.sftp, sourcePath, destPath);
     } else {
       res.status(400).json({ error: "Unknown file action." });
       return;

@@ -64,6 +64,11 @@ export function showToast(message, type = "info", title = "") {
   setTimeout(dismiss, 4500);
 
   container.appendChild(toast);
+
+  // Dispatch custom event for Notification Center integration
+  document.dispatchEvent(new CustomEvent("systemNotification", {
+    detail: { message, type, title: finalTitle, timestamp: Date.now() }
+  }));
 }
 
 export function showModal({ title, message, type = "alert", defaultValue = "" }) {

@@ -461,6 +461,7 @@ export function switchEditorTab(filePath) {
   const activeEditor = ensureEditor();
   if (!file || !activeEditor) return;
   state.openFilePath = filePath;
+  updateEditorCommandCenter();
   if (editorWorkbenchEl()?.dataset.editorView === "settings" || editorWorkbenchEl()?.dataset.editorView === "keybindings") {
     setEditorWorkbenchView("explorer");
   }
@@ -508,6 +509,7 @@ export async function closeEditorTab(filePath) {
   } else {
     renderEditorTabs();
   }
+  updateEditorCommandCenter();
 }
 
 export async function openRemoteFile(filePath) {
@@ -704,6 +706,7 @@ export function updateEditorStatusBar() {
 export async function openEditorExplorerPath(path) {
   if (!state.session) return;
   state.editorExplorerPath = path;
+  updateEditorCommandCenter();
   state.editorExplorerExpanded.clear();
   state.editorExplorerLoading.clear();
   
@@ -950,4 +953,204 @@ export function renderCommandPalette(mode = "command") {
       container.append(button);
     });
   }
+}
+
+export function initializeEditorSearch() {
+  const searchInput = document.querySelector("#editorWorkbenchSearch");
+  const replaceInput = document.querySelector("#editorWorkbenchReplace");
+  const searchEmpty = document.querySelector("#editorSearchEmpty");
+  const searchResults = document.querySelector("#editorSearchResults");
+
+  if (!searchInput || !searchResults) return;
+
+  const performSearch = () => {
+    const query = searchInput.value;
+    if (!query) {
+      searchEmpty.style.display = "block";
+      searchEmpty.textContent = "Search is scoped to open files.";
+      searchResults.style.display = "none";
+      searchResults.innerHTML = "";
+      return;
+    }
+
+    searchResults.innerHTML = "";
+    let totalMatches = 0;
+    let filesWithMatches = 0;
+
+    state.openFiles.forEach((file, filePath) => {
+      const fileName = filePath.split("/").pop();
+      const parentDir = filePath.split("/").slice(0, -1).join("/") || ".";
+      const matches = file.model.findMatches(query, false, false, false, null, false);
+
+      if (matches.length > 0) {
+        filesWithMatches++;
+        totalMatches += matches.length;
+
+        // File section container
+        const fileSection = document.createElement("div");
+        fileSection.className = "editor-search-file-section";
+        fileSection.style.cssText = "margin-bottom: 8px; display: flex; flex-direction: column; gap: 2px;";
+
+        // Collapsible header
+        const header = document.createElement("div");
+        header.className = "editor-search-file-header";
+        header.style.cssText = "display: flex; align-items: center; justify-content: space-between; padding: 4px 6px; cursor: pointer; border-radius: 4px; background: rgba(255, 255, 255, 0.02); font-size: 13px; user-select: none;";
+        header.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 6px; min-width: 0;">
+            <span class="editor-tree-twist" style="flex-shrink: 0; width: 12px; height: 12px; transform: rotate(0deg); transition: transform 0.1s;"></span>
+            <span style="flex-shrink: 0;">${getEditorFileIcon(fileName, false)}</span>
+            <span style="font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #e2e8f0; font-size: 13px;">${escapeHtml(fileName)}</span>
+            <small style="color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px;">${escapeHtml(parentDir)}</small>
+          </div>
+          <span style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 9999px; flex-shrink: 0;">${matches.length}</span>
+        `;
+
+        const matchContainer = document.createElement("div");
+        matchContainer.className = "editor-search-match-list";
+        matchContainer.style.cssText = "display: flex; flex-direction: column; gap: 2px; padding-left: 14px;";
+
+        // Click header to collapse/expand
+        let isCollapsed = false;
+        header.addEventListener("click", () => {
+          isCollapsed = !isCollapsed;
+          matchContainer.style.display = isCollapsed ? "none" : "flex";
+          const twist = header.querySelector(".editor-tree-twist");
+          if (twist) twist.style.transform = isCollapsed ? "rotate(-90deg)" : "rotate(0deg)";
+        });
+
+        // Add matches
+        matches.forEach((match) => {
+          const matchRow = document.createElement("button");
+          matchRow.type = "button";
+          matchRow.className = "editor-search-match-row";
+          matchRow.style.cssText = "display: flex; align-items: center; text-align: left; background: transparent; border: 0; border-radius: 4px; padding: 4px 6px; color: #94a3b8; font-family: monospace; font-size: 12px; cursor: pointer; width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;";
+          
+          const lineNum = match.range.startLineNumber;
+          const lineContent = file.model.getLineContent(lineNum);
+          
+          // Precise slice-and-escape highlight
+          const startIdx = match.range.startColumn - 1;
+          const endIdx = match.range.endColumn - 1;
+          const before = lineContent.substring(0, startIdx);
+          const matchedText = lineContent.substring(startIdx, endIdx);
+          const after = lineContent.substring(endIdx);
+          const highlightedHtml = `${escapeHtml(before)}<mark style="background: rgba(245, 158, 11, 0.35); color: #f59e0b; font-weight: 600; border-radius: 2px; padding: 0 1px;">${escapeHtml(matchedText)}</mark>${escapeHtml(after)}`;
+
+          matchRow.innerHTML = `
+            <span style="color: #64748b; margin-right: 8px; flex-shrink: 0; min-width: 20px; text-align: right;">${lineNum}:</span>
+            <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">${highlightedHtml}</span>
+          `;
+
+          matchRow.addEventListener("click", () => {
+            switchEditorTab(filePath);
+            state.editor.setSelection(match.range);
+            state.editor.revealRangeInCenter(match.range);
+            state.editor.focus();
+          });
+
+          // Add hover effect
+          matchRow.addEventListener("mouseenter", () => { matchRow.style.background = "rgba(255, 255, 255, 0.05)"; matchRow.style.color = "#f1f5f9"; });
+          matchRow.addEventListener("mouseleave", () => { matchRow.style.background = "transparent"; matchRow.style.color = "#94a3b8"; });
+
+          matchContainer.appendChild(matchRow);
+        });
+
+        // Hover effect for header
+        header.addEventListener("mouseenter", () => header.style.background = "rgba(255, 255, 255, 0.05)");
+        header.addEventListener("mouseleave", () => header.style.background = "rgba(255, 255, 255, 0.02)");
+
+        fileSection.appendChild(header);
+        fileSection.appendChild(matchContainer);
+        searchResults.appendChild(fileSection);
+      }
+    });
+
+    if (totalMatches > 0) {
+      searchEmpty.style.display = "none";
+      searchResults.style.display = "flex";
+    } else {
+      searchEmpty.style.display = "block";
+      searchEmpty.textContent = `No results found for "${query}".`;
+      searchResults.style.display = "none";
+    }
+  };
+
+  searchInput.addEventListener("input", performSearch);
+
+  // Replace functionality on press Enter in replace input
+  replaceInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      const query = searchInput.value;
+      const replaceText = replaceInput.value;
+      if (!query) return;
+
+      let count = 0;
+      let fileCount = 0;
+
+      state.openFiles.forEach((file, filePath) => {
+        const matches = file.model.findMatches(query, false, false, false, null, false);
+        if (matches.length > 0) {
+          fileCount++;
+          count += matches.length;
+          const edits = matches.map(m => ({
+            range: m.range,
+            text: replaceText
+          }));
+          file.model.pushEditOperations([], edits, () => null);
+        }
+      });
+
+      if (count > 0) {
+        showToast(`Replaced ${count} occurrence(s) across ${fileCount} file(s).`, "success");
+        performSearch();
+      } else {
+        showToast("No matches found to replace.", "info");
+      }
+    }
+  });
+}
+
+export function updateEditorCommandCenter() {
+  const textEl = document.querySelector("#editorCommandCenterText");
+  if (!textEl) return;
+
+  if (state.openFilePath) {
+    const fileName = state.openFilePath.split("/").pop();
+    const folderName = state.editorExplorerPath ? state.editorExplorerPath.split("/").pop() : "create-a-ssh-app-ui-based";
+    textEl.textContent = `${folderName} > ${fileName}`;
+  } else if (state.editorExplorerPath) {
+    textEl.textContent = state.editorExplorerPath.split("/").pop() || "create-a-ssh-app-ui-based";
+  } else {
+    textEl.textContent = "create-a-ssh-app-ui-based";
+  }
+}
+
+export function initializeEditorCommandCenter() {
+  const btn = document.querySelector("#editorCommandCenter");
+  if (btn) {
+    btn.addEventListener("click", () => {
+      openCommandPalette();
+    });
+  }
+  updateEditorCommandCenter();
+}
+
+export function initializeEditorSettingsTOC() {
+  const buttons = document.querySelectorAll(".editor-settings-toc [data-settings-target]");
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      buttons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const targetId = btn.dataset.settingsTarget;
+      const targetEl = document.querySelector(`#settings-${targetId}`);
+      const container = document.querySelector(".settings-body");
+      if (container && targetEl) {
+        container.scrollTo({
+          top: targetEl.offsetTop - container.offsetTop - 10,
+          behavior: "smooth"
+        });
+      }
+    });
+  });
 }

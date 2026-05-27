@@ -19,7 +19,7 @@ import {
 } from './js/windowManager.js';
 import {
   loadRecentApps, saveRecentApps, formatRecentAppTime, renderRecentApps,
-  rememberRecentApp, openStartMenu, closeStartMenu, toggleStartMenu
+  rememberRecentApp, openStartMenu, closeStartMenu, toggleStartMenu, initializeStartMenuSearch
 } from './js/startMenu.js';
 import {
   addTransferQueue, updateTransferProgress
@@ -35,7 +35,8 @@ import {
   inferLanguage, formatLanguageLabel, updateEditorStatusBar, openEditorExplorerPath,
   renderEditorExplorer, toggleEditorTheme, toggleEditorMinimap, openCommandPalette,
   closeCommandPalette, renderCommandPalette, editorThemes, initializeEditorExplorerResize,
-  setEditorWorkbenchView, applyEditorFontSize, updateEditorThemeClass
+  setEditorWorkbenchView, applyEditorFontSize, updateEditorThemeClass, initializeEditorSearch,
+  initializeEditorCommandCenter, initializeEditorSettingsTOC
 } from './js/editor.js';
 import {
   parseAnsiColors, renderTerminalLog, pushTerminal, command, updateTerminalPrompt,
@@ -93,28 +94,15 @@ stopAutoConnectBtn?.addEventListener("click", cancelAutoConnect);
 
 // Fullscreen toggle event listeners
 const fullscreenButton = document.querySelector("#fullscreenButton");
-if (fullscreenButton) {
-  fullscreenButton.addEventListener("click", () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        showToast(`Fullscreen error: ${err.message}`, "error");
-      });
-    } else {
-      document.exitFullscreen().catch((err) => {
-        showToast(`Exit fullscreen error: ${err.message}`, "error");
-      });
-    }
-  });
-}
 
-document.addEventListener("fullscreenchange", () => {
+function updateFullscreenButtonUI(isFullscreen) {
   const fullscreenButton = document.querySelector("#fullscreenButton");
   if (!fullscreenButton) return;
   
   const span = fullscreenButton.querySelector("span");
   const svg = fullscreenButton.querySelector("svg");
   
-  if (document.fullscreenElement) {
+  if (isFullscreen) {
     fullscreenButton.title = "Exit Fullscreen";
     if (span) span.textContent = "Exit Full Screen";
     if (svg) {
@@ -126,6 +114,36 @@ document.addEventListener("fullscreenchange", () => {
     if (svg) {
       svg.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>';
     }
+  }
+}
+
+if (fullscreenButton) {
+  fullscreenButton.addEventListener("click", () => {
+    if (window.electronAPI) {
+      window.electronAPI.toggleFullscreen();
+    } else {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch((err) => {
+          showToast(`Fullscreen error: ${err.message}`, "error");
+        });
+      } else {
+        document.exitFullscreen().catch((err) => {
+          showToast(`Exit fullscreen error: ${err.message}`, "error");
+        });
+      }
+    }
+  });
+}
+
+if (window.electronAPI) {
+  window.electronAPI.onFullscreenChange((isFullscreen) => {
+    updateFullscreenButtonUI(isFullscreen);
+  });
+}
+
+document.addEventListener("fullscreenchange", () => {
+  if (!window.electronAPI) {
+    updateFullscreenButtonUI(!!document.fullscreenElement);
   }
 });
 
@@ -496,6 +514,53 @@ document.querySelector("#fileContextOpen")?.addEventListener("click", () => {
 document.querySelector("#fileContextRename")?.addEventListener("click", renameSelectedItem);
 document.querySelector("#fileContextDownload")?.addEventListener("click", copySelected);
 document.querySelector("#fileContextDelete")?.addEventListener("click", deleteSelectedItem);
+document.querySelector("#fileContextCopy")?.addEventListener("click", () => {
+  if (state.activeItemForFileContext) {
+    const fullPath = joinPath(state.currentPath, state.activeItemForFileContext.name);
+    state.clipboard = {
+      action: "copy",
+      path: fullPath,
+      name: state.activeItemForFileContext.name
+    };
+    showToast(`Copied "${state.activeItemForFileContext.name}" to clipboard.`, "info");
+  }
+});
+document.querySelector("#fileContextCut")?.addEventListener("click", () => {
+  if (state.activeItemForFileContext) {
+    const fullPath = joinPath(state.currentPath, state.activeItemForFileContext.name);
+    state.clipboard = {
+      action: "cut",
+      path: fullPath,
+      name: state.activeItemForFileContext.name
+    };
+    showToast(`Cut "${state.activeItemForFileContext.name}" to clipboard.`, "info");
+  }
+});
+document.querySelector("#fileContextPaste")?.addEventListener("click", async () => {
+  if (!state.clipboard || !state.clipboard.path) {
+    showToast("Clipboard is empty.", "info");
+    return;
+  }
+  const destPath = joinPath(state.currentPath, state.clipboard.name);
+  if (destPath === state.clipboard.path) {
+    showToast("Cannot paste file into itself.", "error");
+    return;
+  }
+  try {
+    if (state.clipboard.action === "copy") {
+      showToast(`Copying "${state.clipboard.name}"...`, "info");
+      await runFileAction("copy", { sourcePath: state.clipboard.path, destPath });
+      showToast(`Successfully pasted (copied) "${state.clipboard.name}".`, "success");
+    } else if (state.clipboard.action === "cut") {
+      showToast(`Moving "${state.clipboard.name}"...`, "info");
+      await runFileAction("move", { sourcePath: state.clipboard.path, destPath });
+      showToast(`Successfully pasted (moved) "${state.clipboard.name}".`, "success");
+      state.clipboard = null;
+    }
+  } catch (err) {
+    showToast(`Paste failed: ${err.message}`, "error");
+  }
+});
 document.querySelector("#fileContextCopyPath")?.addEventListener("click", async () => {
   if (state.activeItemForFileContext) {
     const fullPath = joinPath(state.currentPath, state.activeItemForFileContext.name);
@@ -587,6 +652,10 @@ document.querySelector("#contextClose")?.addEventListener("click", () => {
 document.querySelector(".start-button")?.addEventListener("click", (e) => {
   e.stopPropagation();
   toggleStartMenu();
+});
+document.querySelector("#taskbarSearchButton")?.addEventListener("click", (e) => {
+  e.stopPropagation();
+  openStartMenu();
 });
 document.querySelector("#startDisconnectButton")?.addEventListener("click", disconnectSession);
 
@@ -839,6 +908,9 @@ window.addEventListener("keydown", (event) => {
     event.preventDefault();
     openAltTabSwitcher(-1);
   } else if (event.key === "Escape") {
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      event.preventDefault();
+    }
     if (state.isAltTabOpen) closeAltTabSwitcher(false);
     if (!document.querySelector("#connectPanel")?.classList.contains("hidden")) closeConnectionSurface();
     closeCommandPalette();
@@ -978,6 +1050,11 @@ async function initializeSessionState() {
   makeWindowsDraggable();
   makeWindowsResizable();
   initializeEditorExplorerResize();
+  initializeEditorSearch();
+  initializeStartMenuSearch();
+  initializeEditorCommandCenter();
+  initializeEditorSettingsTOC();
+  initializeShellPopups();
   syncTaskbarState();
   initializeTaskbarTooltips();
   updateConnectionDetails();
@@ -989,3 +1066,347 @@ pushTerminal("SSH Bridge Tunnel Terminal [v1.0.0]");
 pushTerminal("Type command options or click quick command pills below to execute.");
 pushTerminal("Ready. Please sign in to establish a remote SSH session.");
 pushTerminal("");
+
+// -------------------------------------------------------------
+// 9. Windows-style Shell Popups (Calendar, Weather, Notifications, Tray Icons)
+// -------------------------------------------------------------
+
+function closeAllTrayPopups() {
+  document.querySelectorAll(".tray-popup, .calendar-popup, .weather-popup").forEach(p => {
+    p.classList.add("hidden");
+    p.style.opacity = "";
+    p.style.visibility = "";
+    p.style.transform = "";
+  });
+}
+
+// A. Calendar Rendering Logic
+let currentCalendarDate = new Date();
+
+function renderCalendar() {
+  const monthYearEl = document.querySelector("#calendarMonthYear");
+  const daysEl = document.querySelector("#calendarDays");
+  if (!monthYearEl || !daysEl) return;
+
+  const year = currentCalendarDate.getFullYear();
+  const month = currentCalendarDate.getMonth();
+
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  monthYearEl.textContent = `${monthNames[month]} ${year}`;
+
+  daysEl.innerHTML = "";
+
+  const firstDayIndex = new Date(year, month, 1).getDay();
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  const prevLastDay = new Date(year, month, 0).getDate();
+
+  const today = new Date();
+
+  // Prev month padding
+  for (let x = firstDayIndex; x > 0; x--) {
+    const span = document.createElement("span");
+    span.style.cssText = "color: #475569; padding: 6px; font-size: 11px;";
+    span.textContent = prevLastDay - x + 1;
+    daysEl.appendChild(span);
+  }
+
+  // Current month days
+  for (let i = 1; i <= lastDay; i++) {
+    const span = document.createElement("span");
+    span.style.cssText = "padding: 6px; border-radius: 6px; cursor: pointer; display: inline-grid; place-items: center; transition: background 0.15s; font-weight: 500;";
+    span.textContent = i;
+
+    if (i === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+      span.style.background = "#58a6ff";
+      span.style.color = "#0d1117";
+      span.style.fontWeight = "bold";
+    } else {
+      span.addEventListener("mouseenter", () => span.style.background = "rgba(255,255,255,0.08)");
+      span.addEventListener("mouseleave", () => span.style.background = "transparent");
+    }
+
+    daysEl.appendChild(span);
+  }
+
+  // Next month padding
+  const totalCells = firstDayIndex + lastDay;
+  const nextDays = 42 - totalCells;
+  for (let j = 1; j <= nextDays; j++) {
+    const span = document.createElement("span");
+    span.style.cssText = "color: #475569; padding: 6px; font-size: 11px;";
+    span.textContent = j;
+    daysEl.appendChild(span);
+  }
+}
+
+// B. Notification Center Logic
+const systemNotifications = [];
+
+function addSystemNotification(message, type = "info", title = "") {
+  const finalTitle = title || (type === "error" ? "System Error" : type === "success" ? "Success" : "Notification");
+  const notification = {
+    id: 'notif-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+    title: finalTitle,
+    message,
+    type,
+    time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  };
+
+  systemNotifications.unshift(notification);
+  updateNotificationsBadge();
+  renderNotificationsList();
+}
+
+function updateNotificationsBadge() {
+  const badge = document.querySelector("#trayBadge");
+  if (!badge) return;
+  
+  const count = systemNotifications.length;
+  if (count > 0) {
+    badge.textContent = count;
+    badge.classList.remove("hidden");
+  } else {
+    badge.classList.add("hidden");
+  }
+}
+
+function renderNotificationsList() {
+  const list = document.querySelector("#notificationList");
+  if (!list) return;
+
+  list.innerHTML = "";
+  if (systemNotifications.length === 0) {
+    list.innerHTML = `<div class="empty-notification" style="color: #8b949e; text-align: center; padding: 20px 0;">No new notifications.</div>`;
+    return;
+  }
+
+  systemNotifications.forEach(notif => {
+    const div = document.createElement("div");
+    div.style.cssText = "display: flex; flex-direction: column; gap: 4px; padding: 8px; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05); position: relative; transition: background 0.2s;";
+    
+    // Type colors
+    const borderLeftColor = notif.type === "success" ? "#56d364" : notif.type === "error" ? "#f85149" : "#58a6ff";
+    div.style.borderLeft = `3px solid ${borderLeftColor}`;
+
+    div.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <strong style="font-size: 12px; color: #f0f6fc;">${escapeHtml(notif.title)}</strong>
+        <span style="font-size: 10px; color: #8b949e;">${notif.time}</span>
+      </div>
+      <p style="margin: 0; font-size: 11px; color: #c9d1d9; line-height: 1.3; padding-right: 16px;">${escapeHtml(notif.message)}</p>
+      <button class="notif-delete-btn" type="button" style="position: absolute; right: 6px; top: 6px; background: transparent; border: 0; color: #8b949e; cursor: pointer; font-size: 12px; font-weight: bold; line-height: 1; padding: 2px; outline: 0;">&times;</button>
+    `;
+
+    div.querySelector(".notif-delete-btn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      const index = systemNotifications.findIndex(n => n.id === notif.id);
+      if (index !== -1) {
+        systemNotifications.splice(index, 1);
+        updateNotificationsBadge();
+        renderNotificationsList();
+      }
+    });
+
+    div.addEventListener("mouseenter", () => div.style.background = "rgba(255,255,255,0.06)");
+    div.addEventListener("mouseleave", () => div.style.background = "rgba(255,255,255,0.03)");
+
+    list.appendChild(div);
+  });
+}
+
+// C. Initialize all Popups and event handlers
+function initializeShellPopups() {
+  // Calendar trigger
+  const clockBtn = document.querySelector("#taskbarClockButton");
+  const calendarPopup = document.querySelector("#calendarPopup");
+  if (clockBtn && calendarPopup) {
+    clockBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isHidden = calendarPopup.classList.contains("hidden");
+      closeAllTrayPopups();
+      if (isHidden) {
+        currentCalendarDate = new Date();
+        renderCalendar();
+        calendarPopup.classList.remove("hidden");
+        if (window.gsap && state.isAnimationEnabled) {
+          window.gsap.fromTo(calendarPopup, { autoAlpha: 0, y: 15 }, { autoAlpha: 1, y: 0, duration: 0.18 });
+        }
+      }
+    });
+  }
+
+  // Prev/Next calendar buttons
+  document.querySelector("#prevMonthBtn")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+    renderCalendar();
+  });
+  document.querySelector("#nextMonthBtn")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+    renderCalendar();
+  });
+
+  // Weather trigger
+  const weatherBtn = document.querySelector("#taskbarWeatherButton");
+  const weatherPopup = document.querySelector("#weatherPopup");
+  if (weatherBtn && weatherPopup) {
+    weatherBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isHidden = weatherPopup.classList.contains("hidden");
+      closeAllTrayPopups();
+      if (isHidden) {
+        weatherPopup.classList.remove("hidden");
+        if (window.gsap && state.isAnimationEnabled) {
+          window.gsap.fromTo(weatherPopup, { autoAlpha: 0, y: 15 }, { autoAlpha: 1, y: 0, duration: 0.18 });
+        }
+      }
+    });
+  }
+
+  // Tray Icons click panels (Wifi, Volume, Battery, Notification)
+  const trayIconsConfig = [
+    { trigger: "#trayWifi", popup: "#wifiPopup" },
+    { trigger: "#trayVolume", popup: "#volumePopup" },
+    { trigger: "#trayBattery", popup: "#batteryPopup" },
+    { trigger: "#trayNotification", popup: "#notificationPopup" }
+  ];
+
+  trayIconsConfig.forEach(({ trigger, popup }) => {
+    const trigEl = document.querySelector(trigger);
+    const popEl = document.querySelector(popup);
+    if (trigEl && popEl) {
+      trigEl.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const isHidden = popEl.classList.contains("hidden");
+        closeAllTrayPopups();
+        if (isHidden) {
+          popEl.classList.remove("hidden");
+          if (window.gsap && state.isAnimationEnabled) {
+            window.gsap.fromTo(popEl, { autoAlpha: 0, y: 15 }, { autoAlpha: 1, y: 0, duration: 0.18 });
+          }
+
+          // Reset notification center badge count when opening it
+          if (trigger === "#trayNotification") {
+            const badge = document.querySelector("#trayBadge");
+            if (badge) badge.classList.add("hidden");
+          }
+        }
+      });
+    }
+  });
+
+  // Volume slider control
+  const volumeSlider = document.querySelector("#volumeSlider");
+  const volumeText = document.querySelector("#volumeLevelText");
+  if (volumeSlider && volumeText) {
+    volumeSlider.addEventListener("input", () => {
+      volumeText.textContent = `${volumeSlider.value}%`;
+    });
+  }
+
+  // Clear all notifications
+  document.querySelector("#clearNotificationsBtn")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    systemNotifications.length = 0;
+    updateNotificationsBadge();
+    renderNotificationsList();
+  });
+
+  // Close popups when clicking anywhere on desktop
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".tray-popup, .calendar-popup, .weather-popup, #taskbarClockButton, #taskbarWeatherButton, .tray-icon")) {
+      closeAllTrayPopups();
+    }
+  });
+
+  // D. Wallpaper and Desktop Context Menu Logic
+  const wallpapers = {
+    default: "radial-gradient(circle at 12% 16%, rgba(0, 120, 212, 0.42), transparent 24%), radial-gradient(circle at 82% 12%, rgba(233, 84, 32, 0.34), transparent 22%), radial-gradient(circle at 74% 88%, rgba(57, 166, 106, 0.26), transparent 28%), linear-gradient(145deg, #16273d 0%, #48566e 50%, #d8a86c 100%)",
+    midnight: "linear-gradient(135deg, #0f172a, #1e1b4b, #311042)",
+    emerald: "linear-gradient(135deg, #022c22, #064e3b, #0f766e)",
+    sunset: "linear-gradient(135deg, #451a03, #78350f, #9a3412)",
+    neon: "linear-gradient(135deg, #09090b, #180828, #032830)"
+  };
+
+  const desktop = document.querySelector(".remote-desktop");
+  const bgMenu = document.querySelector("#desktopBgContextMenu");
+  const wallModal = document.querySelector("#wallpaperModal");
+
+  // Load saved wallpaper
+  const savedWall = localStorage.getItem("sshBridgeWallpaper") || "default";
+  if (desktop && wallpapers[savedWall]) {
+    desktop.style.background = wallpapers[savedWall];
+  }
+
+  // Right-click on desktop
+  desktop?.addEventListener("contextmenu", (e) => {
+    if (e.target.classList.contains("remote-desktop")) {
+      e.preventDefault();
+      closeAllTrayPopups();
+      document.querySelector("#fileContextMenu")?.classList.add("hidden");
+      document.querySelector("#tabContextMenu")?.classList.add("hidden");
+      document.querySelector("#taskbarContextMenu")?.classList.add("hidden");
+      
+      if (bgMenu) {
+        bgMenu.style.left = `${e.clientX}px`;
+        bgMenu.style.top = `${e.clientY}px`;
+        bgMenu.classList.remove("hidden");
+      }
+    }
+  });
+
+  // Close context menu on click elsewhere
+  document.addEventListener("click", () => {
+    bgMenu?.classList.add("hidden");
+  });
+
+  // Change wallpaper button in menu
+  document.querySelector("#contextChangeBg")?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    bgMenu?.classList.add("hidden");
+    if (wallModal) {
+      wallModal.classList.remove("hidden");
+      // Highlight current wallpaper btn
+      const current = localStorage.getItem("sshBridgeWallpaper") || "default";
+      document.querySelectorAll(".wallpaper-option-btn").forEach(btn => {
+        btn.style.borderColor = btn.dataset.wallpaper === current ? "#58a6ff" : "transparent";
+      });
+    }
+  });
+
+  // Close wallpaper modal
+  document.querySelector("#closeWallpaperBtn")?.addEventListener("click", () => {
+    wallModal?.classList.add("hidden");
+  });
+
+  // Show desktop (minimize all)
+  document.querySelector("#contextShowDesktop")?.addEventListener("click", () => {
+    bgMenu?.classList.add("hidden");
+    document.querySelectorAll(".window").forEach(w => {
+      if (!w.classList.contains("closed")) {
+        w.classList.add("minimized");
+      }
+    });
+    syncTaskbarState();
+  });
+
+  // Click wallpaper option buttons
+  document.querySelectorAll(".wallpaper-option-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const wallId = btn.dataset.wallpaper;
+      if (desktop && wallpapers[wallId]) {
+        desktop.style.background = wallpapers[wallId];
+        localStorage.setItem("sshBridgeWallpaper", wallId);
+        showToast("Desktop wallpaper updated.", "success");
+      }
+      wallModal?.classList.add("hidden");
+    });
+  });
+
+  // Listen to systemNotifications dispatched from showToast
+  document.addEventListener("systemNotification", (e) => {
+    const { message, type, title } = e.detail;
+    addSystemNotification(message, type, title);
+  });
+}
